@@ -1,31 +1,29 @@
 package db
 
 import (
-	"fantasy/database/entities"
-	"fmt"
+	"context"
 	"log"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
-var DB *gorm.DB
+var Client *firestore.Client
 
-func InitConnection() {
-	db, err := gorm.Open("mysql", GetDSN())
+func InitClient() {
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: os.Getenv("PROJID")}
+	sa := option.WithCredentialsFile(os.Getenv("CREDPATH"))
+	app, err := firebase.NewApp(ctx, conf, sa)
 	if err != nil {
-		log.Fatalf("Database Connection Failed. %v", err)
+		log.Fatalln(err)
 	}
 
-	db.AutoMigrate(&entities.Player{})
-	DB = db
-}
-
-func GetDSN() string {
-	return fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/fantasy?charset=utf8&parseTime=True&loc=Local",
-		os.Getenv("DBUSER"),
-		os.Getenv("DBPASS"),
-	)
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	Client = client
 }

@@ -3,14 +3,23 @@ package controllers
 import (
 	"fantasy/database/db"
 	"fantasy/database/entities"
+	"fantasy/database/utils"
 	"net/http"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 )
 
+func GetPlayerData(doc *firestore.DocumentSnapshot) interface{} {
+	return entities.Player{
+		ID:   doc.Ref.ID,
+		Name: utils.GetDocString(doc, "Name"),
+		Role: utils.GetDocString(doc, "Role"),
+	}
+}
+
 func GetPlayers(c *gin.Context) {
-	var players []entities.Player
-	db.DB.Find(&players)
+	players := db.GetAll("players", GetPlayerData)
 	c.JSON(http.StatusOK, gin.H{"data": players})
 }
 
@@ -21,12 +30,10 @@ func NewPlayer(c *gin.Context) {
 		return
 	}
 
-	player := entities.Player{
+	db.InsertItem("players", entities.AddPlayer{
 		Name: input.Name,
 		Role: input.Role,
-		Team: input.Team,
-	}
+	})
 
-	db.DB.Create(&player)
-	c.JSON(http.StatusOK, gin.H{"data": player})
+	c.JSON(http.StatusOK, gin.H{"data": true})
 }

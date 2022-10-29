@@ -15,10 +15,11 @@ func main() {
 		log.Fatalf("Error loading env file. %v", err)
 	}
 
-	engine := gin.Default()
-	db.InitConnection()
+	db.InitClient()
+	defer db.Client.Close()
 
-	engine.GET("/players", controllers.GetPlayers)
-	engine.POST("/players", controllers.NewPlayer)
-	engine.Run(":8080")
+	router := gin.Default()
+	router.GET("/players", controllers.GetPlayers)
+	router.POST("/players", controllers.NewPlayer)
+	router.Run(":8080")
 }
