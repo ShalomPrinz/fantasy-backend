@@ -10,3 +10,5 @@ type AddPlayer struct {
 	Name string `json:"name"`
 	Role string `json:"role"`
 }
+
+var PlayerAttributes = [...]string{"Name", "Role"}

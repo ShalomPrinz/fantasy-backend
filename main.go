@@ -19,7 +19,12 @@ func main() {
 	defer db.Client.Close()
 
 	router := gin.Default()
+
 	router.GET("/players", controllers.GetPlayers)
 	router.POST("/players", controllers.NewPlayer)
+
+	router.GET("/teams", controllers.GetTeams)
+	router.POST("/teams", controllers.NewTeam)
+
 	router.Run(":8080")
 }

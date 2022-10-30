@@ -2,15 +2,13 @@ package db
 
 import (
 	"context"
+	"fantasy/database/utils"
 	"log"
 
-	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
 )
 
-type fn func(*firestore.DocumentSnapshot) interface{}
-
-func GetAll(collection string, callback fn) []interface{} {
+func GetAll(collection string, attr []string) []interface{} {
 	var result []interface{}
 	ctx := context.Background()
 	iter := Client.Collection(collection).Documents(ctx)
@@ -22,7 +20,7 @@ func GetAll(collection string, callback fn) []interface{} {
 		if err != nil {
 			log.Fatalf("Failed to iterate over %s collection: %v", collection, err)
 		}
-		result = append(result, callback(doc))
+		result = append(result, utils.GetDocData(doc, attr))
 	}
 	return result
 }
