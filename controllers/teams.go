@@ -13,6 +13,11 @@ func GetTeams(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": teams})
 }
 
+func GetTeam(c *gin.Context) {
+	team := db.GetSingle("teams", c.Param("id"), entities.TeamAttributes[:])
+	c.JSON(http.StatusOK, gin.H{"data": team})
+}
+
 func NewTeam(c *gin.Context) {
 	var input entities.AddTeam
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -20,9 +25,8 @@ func NewTeam(c *gin.Context) {
 		return
 	}
 
-	db.InsertItem("teams", entities.AddTeam{
-		Name: input.Name,
-	})
+	// For now Team only has ID. Later I will replace this function call
+	db.InsertItemCustomID("teams", input.ID, map[string]interface{}{})
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

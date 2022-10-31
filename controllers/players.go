@@ -13,6 +13,11 @@ func GetPlayers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": players})
 }
 
+func GetPlayer(c *gin.Context) {
+	player := db.GetSingle("players", c.Param("id"), entities.PlayerAttributes[:])
+	c.JSON(http.StatusOK, gin.H{"data": player})
+}
+
 func NewPlayer(c *gin.Context) {
 	var input entities.AddPlayer
 	if err := c.ShouldBindJSON(&input); err != nil {
