@@ -10,12 +10,12 @@ import (
 
 func GetPlayers(c *gin.Context) {
 	players := db.GetAll("players", entities.PlayerAttributes[:])
-	c.JSON(http.StatusOK, gin.H{"data": players})
+	c.JSON(http.StatusOK, gin.H{"players": players})
 }
 
 func GetPlayer(c *gin.Context) {
 	player := db.GetSingle("players", c.Param("id"), entities.PlayerAttributes[:])
-	c.JSON(http.StatusOK, gin.H{"data": player})
+	c.JSON(http.StatusOK, gin.H{"player": player})
 }
 
 func NewPlayer(c *gin.Context) {
@@ -30,5 +30,5 @@ func NewPlayer(c *gin.Context) {
 		Role: input.Role,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"data": true})
+	c.JSON(http.StatusOK, gin.H{"addedPlayer": true})
 }

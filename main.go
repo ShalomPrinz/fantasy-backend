@@ -5,6 +5,7 @@ import (
 	"fantasy/database/db"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,9 @@ func main() {
 	defer db.Client.Close()
 
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:3000"},
+	}))
 
 	router.GET("/players", controllers.GetPlayers)
 	router.GET("/players/:id", controllers.GetPlayer)
