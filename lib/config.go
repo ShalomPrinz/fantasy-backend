@@ -1,4 +1,4 @@
-package db
+package lib
 
 import (
 	"context"
@@ -7,10 +7,12 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
 	"google.golang.org/api/option"
 )
 
 var Client *firestore.Client
+var Auth *auth.Client
 
 func InitClient() {
 	ctx := context.Background()
@@ -21,9 +23,13 @@ func InitClient() {
 		log.Fatalln(err)
 	}
 
-	client, err := app.Firestore(ctx)
+	Client, err = app.Firestore(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	Client = client
+
+	Auth, err = app.Auth(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

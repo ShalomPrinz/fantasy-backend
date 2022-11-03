@@ -2,7 +2,7 @@ package main
 
 import (
 	"fantasy/database/controllers"
-	"fantasy/database/db"
+	"fantasy/database/lib"
 	"log"
 
 	"github.com/gin-contrib/cors"
@@ -16,8 +16,8 @@ func main() {
 		log.Fatalf("Error loading env file. %v", err)
 	}
 
-	db.InitClient()
-	defer db.Client.Close()
+	lib.InitClient()
+	defer lib.Client.Close()
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -31,6 +31,8 @@ func main() {
 	router.GET("/teams", controllers.GetTeams)
 	router.GET("/teams/:id", controllers.GetTeam)
 	router.POST("/teams", controllers.NewTeam)
+
+	router.POST("/users", controllers.NewUser)
 
 	router.Run(":8080")
 }
