@@ -1,17 +1,16 @@
 package lib
 
 import (
-	"context"
 	"fantasy/database/entities"
 	"log"
 
 	"firebase.google.com/go/auth"
+	"github.com/gin-gonic/gin"
 )
 
-func CreateUser(props entities.AddUser) (string, error) {
-	ctx := context.Background()
+func CreateUser(ctx *gin.Context, props entities.AddUser) (string, error) {
 	params := (&auth.UserToCreate{}).
-		DisplayName(props.DisplayName).
+		DisplayName(props.FullName).
 		Email(props.Email).
 		Password(props.Password)
 

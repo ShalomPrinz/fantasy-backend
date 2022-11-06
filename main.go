@@ -22,6 +22,7 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3000"},
+		AllowHeaders: []string{"Content-Type"},
 	}))
 
 	router.GET("/players", controllers.GetPlayers)

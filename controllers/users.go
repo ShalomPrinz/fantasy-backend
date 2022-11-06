@@ -8,22 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewUser(c *gin.Context) {
+func NewUser(ctx *gin.Context) {
 	var input entities.AddUser
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	UID, err := lib.CreateUser(input)
+	UID, err := lib.CreateUser(ctx, input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	lib.InsertItemCustomID("accounts", UID, entities.AddAccount{
-		Team: []entities.Player{},
+	lib.InsertItemCustomID(ctx, "accounts", UID, entities.AddAccount{
+		Nickname: input.Nickname,
+		Team:     []string{},
 	})
 
-	c.JSON(http.StatusOK, gin.H{"addedAccount": true})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }

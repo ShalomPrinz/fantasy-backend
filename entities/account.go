@@ -1,18 +1,21 @@
 package entities
 
 type Account struct {
-	ID   string   `json:"id"`
-	Team []Player `json:"team"`
+	ID       string   `json:"id"`
+	Nickname string   `json:"nickname"`
+	Team     []string `json:"team"`
 }
 
 // My users collection
 type AddAccount struct {
-	Team []Player `json:"team"`
+	Nickname string   `json:"nickname"`
+	Team     []string `json:"team"`
 }
 
 // Firebase Auth database, following auth.UserToCreate struct
 type AddUser struct {
-	DisplayName string
-	Email       string
-	Password    string
+	FullName string
+	Nickname string
+	Email    string
+	Password string
 }

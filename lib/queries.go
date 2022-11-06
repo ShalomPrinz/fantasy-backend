@@ -1,18 +1,17 @@
 package lib
 
 import (
-	"context"
 	"fantasy/database/utils"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func GetAll(collection string, attr []string) []interface{} {
+func GetAll(ctx *gin.Context, collection string, attr []string) []interface{} {
 	var result []interface{}
-	ctx := context.Background()
 	iter := Client.Collection(collection).Documents(ctx)
 	for {
 		doc, err := iter.Next()
@@ -27,8 +26,7 @@ func GetAll(collection string, attr []string) []interface{} {
 	return result
 }
 
-func GetSingle(collection string, id string, attr []string) interface{} {
-	ctx := context.Background()
+func GetSingle(ctx *gin.Context, collection string, id string, attr []string) interface{} {
 	doc, err := Client.Collection(collection).Doc(id).Get(ctx)
 	if status.Code(err) == codes.NotFound {
 		log.Fatalf("No such item with id %s in collection %s", id, collection)
@@ -40,16 +38,14 @@ func GetSingle(collection string, id string, attr []string) interface{} {
 	return utils.GetDocData(doc, attr)
 }
 
-func InsertItem(collection string, item interface{}) {
-	ctx := context.Background()
+func InsertItem(ctx *gin.Context, collection string, item interface{}) {
 	_, _, err := Client.Collection(collection).Add(ctx, item)
 	if err != nil {
 		log.Fatalf("Failed adding item to %s collection: %v", collection, err)
 	}
 }
 
-func InsertItemCustomID(collection string, id string, item interface{}) {
-	ctx := context.Background()
+func InsertItemCustomID(ctx *gin.Context, collection string, id string, item interface{}) {
 	_, err := Client.Collection(collection).Doc(id).Set(ctx, item)
 	if err != nil {
 		log.Fatalf("Failed adding item to %s collection: %v", collection, err)
