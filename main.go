@@ -4,6 +4,7 @@ import (
 	"fantasy/database/controllers"
 	"fantasy/database/lib"
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowHeaders:     []string{"Content-Type"},
+		AllowHeaders:     []string{"Content-Type", os.Getenv("AUTHHEADER")},
 		AllowCredentials: true,
 	}))
 
@@ -34,9 +35,8 @@ func main() {
 	router.GET("/teams/:id", controllers.GetTeam)
 	router.POST("/teams", controllers.NewTeam)
 
-	router.GET("/user", controllers.GetUserInfo)
+	router.GET("/user", controllers.HasIdToken, controllers.GetUserInfo)
 	router.POST("/register", controllers.NewUser)
-	router.POST("/login", controllers.LoginUser)
 
 	router.Run(":8080")
 }

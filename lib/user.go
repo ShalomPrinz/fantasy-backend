@@ -3,7 +3,6 @@ package lib
 import (
 	"fantasy/database/entities"
 	"log"
-	"os"
 	"time"
 
 	"firebase.google.com/go/auth"
@@ -34,15 +33,9 @@ func CreateUser(ctx *gin.Context, props entities.AddUser) (string, error) {
 }
 
 func GetUidByToken(ctx *gin.Context, idToken string) (string, error) {
-	cookie, err := ctx.Cookie(os.Getenv("AUTHCOOKIE"))
+	decoded, err := Auth.VerifyIDTokenAndCheckRevoked(ctx, idToken)
 	if err != nil {
-		log.Printf("using the given id token, cookie is unavailable. %v", err)
-		return "", err
-	}
-
-	decoded, err := Auth.VerifySessionCookieAndCheckRevoked(ctx, cookie)
-	if err != nil {
-		log.Printf("using the given id token, cookie is invalid. %v", err)
+		log.Printf("ID Token %v is invalid. %v", idToken, err)
 		return "", err
 	}
 
