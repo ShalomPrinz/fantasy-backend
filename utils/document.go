@@ -7,8 +7,8 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-func GetDocData(doc *firestore.DocumentSnapshot, attr []string) map[string]string {
-	m := map[string]string{
+func GetDocData(doc *firestore.DocumentSnapshot, attr []string) map[string]any {
+	m := map[string]any{
 		"id": doc.Ref.ID,
 	}
 
@@ -19,15 +19,10 @@ func GetDocData(doc *firestore.DocumentSnapshot, attr []string) map[string]strin
 	return m
 }
 
-func GetDocString(doc *firestore.DocumentSnapshot, field string) string {
+func GetDocString(doc *firestore.DocumentSnapshot, field string) any {
 	value, exist := doc.Data()[field]
 	if !exist {
 		log.Fatalf("No value found in doc: %v", field)
 	}
-
-	stringValue, ok := value.(string)
-	if !ok {
-		log.Fatalf("Not a string in doc field %v: %v", field, value)
-	}
-	return stringValue
+	return value
 }

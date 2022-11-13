@@ -21,8 +21,9 @@ func main() {
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:3000"},
-		AllowHeaders: []string{"Content-Type"},
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowHeaders:     []string{"Content-Type"},
+		AllowCredentials: true,
 	}))
 
 	router.GET("/players", controllers.GetPlayers)
@@ -33,7 +34,9 @@ func main() {
 	router.GET("/teams/:id", controllers.GetTeam)
 	router.POST("/teams", controllers.NewTeam)
 
-	router.POST("/users", controllers.NewUser)
+	router.GET("/user", controllers.GetUserInfo)
+	router.POST("/register", controllers.NewUser)
+	router.POST("/login", controllers.LoginUser)
 
 	router.Run(":8080")
 }
