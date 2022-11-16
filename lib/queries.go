@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func GetAll(ctx *gin.Context, collection string, attr []string) []interface{} {
-	var result []interface{}
+func GetAll[T any](ctx *gin.Context, collection string) []T {
+	var result []T
 	iter := Client.Collection(collection).Documents(ctx)
 	for {
 		doc, err := iter.Next()
@@ -21,12 +21,12 @@ func GetAll(ctx *gin.Context, collection string, attr []string) []interface{} {
 		if err != nil {
 			log.Fatalf("Failed to iterate over %s collection: %v", collection, err)
 		}
-		result = append(result, utils.GetDocData(doc, attr))
+		result = append(result, utils.GetDocData[T](doc))
 	}
 	return result
 }
 
-func GetSingle(ctx *gin.Context, collection string, id string, attr []string) interface{} {
+func GetSingle[T any](ctx *gin.Context, collection string, id string) T {
 	doc, err := Client.Collection(collection).Doc(id).Get(ctx)
 	if status.Code(err) == codes.NotFound {
 		log.Fatalf("No such item with id %s in collection %s", id, collection)
@@ -35,7 +35,7 @@ func GetSingle(ctx *gin.Context, collection string, id string, attr []string) in
 		log.Fatalf("Unexpected error trying to reach id %s in collection %s", id, collection)
 	}
 
-	return utils.GetDocData(doc, attr)
+	return utils.GetDocData[T](doc)
 }
 
 func InsertItem(ctx *gin.Context, collection string, item interface{}) {

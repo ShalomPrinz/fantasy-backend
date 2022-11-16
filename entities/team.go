@@ -1,11 +1,9 @@
 package entities
 
 type Team struct {
-	ID string `json:"id"`
+	Entity `mapstructure:",squash"`
 }
 
 type AddTeam struct {
-	ID string `json:"id"`
+	Entity `mapstructure:",squash"`
 }
-
-var TeamAttributes = [...]string{}

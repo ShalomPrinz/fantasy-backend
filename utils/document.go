@@ -2,27 +2,24 @@ package utils
 
 import (
 	"log"
-	"strings"
 
 	"cloud.google.com/go/firestore"
+	"github.com/mitchellh/mapstructure"
 )
 
-func GetDocData(doc *firestore.DocumentSnapshot, attr []string) map[string]any {
-	m := map[string]any{
-		"id": doc.Ref.ID,
+func GetDocData[T any](doc *firestore.DocumentSnapshot) T {
+	entity := map[string]any{
+		"ID": doc.Ref.ID,
 	}
 
-	for _, value := range attr {
-		m[strings.ToLower(value)] = GetDocString(doc, value)
+	if err := doc.DataTo(&entity); err != nil {
+		log.Fatalf("Couldn't copy data from doc into the given struct. %v", err)
 	}
 
-	return m
-}
-
-func GetDocString(doc *firestore.DocumentSnapshot, field string) any {
-	value, exist := doc.Data()[field]
-	if !exist {
-		log.Fatalf("No value found in doc: %v", field)
+	var result T
+	err := mapstructure.Decode(entity, &result)
+	if err != nil {
+		log.Fatalf("Couldn't convert data given struct. %v", err)
 	}
-	return value
+	return result
 }

@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.6.0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect

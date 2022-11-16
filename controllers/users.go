@@ -17,7 +17,7 @@ func GetUserInfo(ctx *gin.Context) {
 		return
 	}
 
-	user := lib.GetSingle(ctx, "accounts", UID, entities.AccountAttributes[:])
+	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
 	ctx.JSON(http.StatusOK, gin.H{"user": user})
 }
 

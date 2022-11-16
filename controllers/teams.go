@@ -9,12 +9,12 @@ import (
 )
 
 func GetTeams(ctx *gin.Context) {
-	teams := lib.GetAll(ctx, "teams", entities.TeamAttributes[:])
+	teams := lib.GetAll[entities.Team](ctx, "teams")
 	ctx.JSON(http.StatusOK, gin.H{"teams": teams})
 }
 
 func GetTeam(ctx *gin.Context) {
-	team := lib.GetSingle(ctx, "teams", ctx.Param("id"), entities.TeamAttributes[:])
+	team := lib.GetSingle[entities.Team](ctx, "teams", ctx.Param("id"))
 	ctx.JSON(http.StatusOK, gin.H{"team": team})
 }
 

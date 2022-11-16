@@ -9,12 +9,12 @@ import (
 )
 
 func GetPlayers(ctx *gin.Context) {
-	players := lib.GetAll(ctx, "players", entities.PlayerAttributes[:])
+	players := lib.GetAll[entities.Player](ctx, "players")
 	ctx.JSON(http.StatusOK, gin.H{"players": players})
 }
 
 func GetPlayer(ctx *gin.Context) {
-	player := lib.GetSingle(ctx, "players", ctx.Param("id"), entities.PlayerAttributes[:])
+	player := lib.GetSingle[entities.Player](ctx, "players", ctx.Param("id"))
 	ctx.JSON(http.StatusOK, gin.H{"player": player})
 }
 
