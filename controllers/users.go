@@ -4,21 +4,43 @@ import (
 	"fantasy/database/entities"
 	"fantasy/database/lib"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
+func AddTeamPlayer(ctx *gin.Context) {
+	UID, err := lib.GetUidByToken(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	var input entities.Entity
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	path := "players/" + input.ID
+	lib.InsertItemIntoArray(ctx, "accounts", UID, "Team", path)
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
 func GetUserInfo(ctx *gin.Context) {
-	idToken := ctx.GetHeader(os.Getenv("AUTHHEADER"))
-	UID, err := lib.GetUidByToken(ctx, idToken)
+	UID, err := lib.GetUidByToken(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
-	ctx.JSON(http.StatusOK, gin.H{"user": user})
+	team := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+	detailed := entities.DetailedAccount{
+		Entity:   user.Entity,
+		Nickname: user.Nickname,
+		Team:     team,
+	}
+	ctx.JSON(http.StatusOK, gin.H{"user": detailed})
 }
 
 func NewUser(ctx *gin.Context) {
