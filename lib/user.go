@@ -3,7 +3,6 @@ package lib
 import (
 	"fantasy/database/entities"
 	"log"
-	"os"
 	"time"
 
 	"firebase.google.com/go/auth"
@@ -33,8 +32,7 @@ func CreateUser(ctx *gin.Context, props entities.AddUser) (string, error) {
 	return user.UID, nil
 }
 
-func GetUidByToken(ctx *gin.Context) (string, error) {
-	idToken := ctx.GetHeader(os.Getenv("AUTHHEADER"))
+func GetUidByToken(ctx *gin.Context, idToken string) (string, error) {
 	decoded, err := Auth.VerifyIDTokenAndCheckRevoked(ctx, idToken)
 	if err != nil {
 		log.Printf("ID Token %v is invalid. %v", idToken, err)

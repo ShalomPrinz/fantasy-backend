@@ -1,16 +1,25 @@
 package controllers
 
 import (
+	"fantasy/database/lib"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
-func HasIdToken(ctx *gin.Context) {
+func VerifyIdToken(ctx *gin.Context) {
 	idToken := ctx.GetHeader(os.Getenv("AUTHHEADER"))
 	if idToken == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No logged in user"})
 	}
+
+	UID, err := lib.GetUidByToken(ctx, idToken)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.Set("UID", UID)
 	ctx.Next()
 }

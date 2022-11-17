@@ -9,11 +9,7 @@ import (
 )
 
 func AddTeamPlayer(ctx *gin.Context) {
-	UID, err := lib.GetUidByToken(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	UID := ctx.MustGet("UID").(string)
 
 	var input entities.Entity
 	if err := ctx.ShouldBindJSON(&input); err != nil {
@@ -27,11 +23,7 @@ func AddTeamPlayer(ctx *gin.Context) {
 }
 
 func GetUserInfo(ctx *gin.Context) {
-	UID, err := lib.GetUidByToken(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	UID := ctx.MustGet("UID").(string)
 
 	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
 	team := lib.GetByIds[entities.Player](ctx, "players", user.Team)

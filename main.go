@@ -36,8 +36,8 @@ func main() {
 	router.POST("/teams", controllers.NewTeam)
 
 	router.POST("/register", controllers.NewUser)
-	router.POST("/user/addplayer", controllers.HasIdToken, controllers.AddTeamPlayer)
-	router.GET("/user", controllers.HasIdToken, controllers.GetUserInfo)
+	router.POST("/user/addplayer", controllers.VerifyIdToken, controllers.AddTeamPlayer)
+	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
 	router.Run(":8080")
 }
