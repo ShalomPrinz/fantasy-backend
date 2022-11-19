@@ -22,6 +22,20 @@ func AddTeamPlayer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
+func RemoveTeamPlayer(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
+
+	var input entities.Entity
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	path := "players/" + input.ID
+	lib.RemoveItemFromArray(ctx, "accounts", UID, "Team", path)
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
 func GetUserInfo(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 

@@ -12,11 +12,12 @@ func VerifyIdToken(ctx *gin.Context) {
 	idToken := ctx.GetHeader(os.Getenv("AUTHHEADER"))
 	if idToken == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No logged in user"})
+		return
 	}
 
 	UID, err := lib.GetUidByToken(ctx, idToken)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 

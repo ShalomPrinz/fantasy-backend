@@ -76,3 +76,15 @@ func InsertItemIntoArray(ctx *gin.Context, collection string, doc string, path s
 			path, doc, collection, err)
 	}
 }
+
+func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path string, item any) {
+	docs := Client.Collection(collection).Doc(doc)
+	_, err := docs.Update(ctx, []firestore.Update{
+		{Path: path, Value: firestore.ArrayRemove(item)},
+	})
+	if err != nil {
+		log.Fatalf(
+			"Failed removing item from array %v in doc %v in %v collection. %v",
+			path, doc, collection, err)
+	}
+}
