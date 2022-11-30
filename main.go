@@ -27,8 +27,8 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	router.GET("/players", controllers.GetPlayers)
 	router.GET("/players/:id", controllers.GetPlayer)
+	router.GET("/players/query", controllers.QueryPlayersByName)
 	router.POST("/players", controllers.NewPlayer)
 
 	router.GET("/teams", controllers.GetTeams)

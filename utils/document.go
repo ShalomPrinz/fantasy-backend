@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"cloud.google.com/go/firestore"
-	"github.com/mitchellh/mapstructure"
 )
 
 func GetDocData[T any](doc *firestore.DocumentSnapshot) T {
@@ -20,12 +19,7 @@ func GetDocData[T any](doc *firestore.DocumentSnapshot) T {
 		log.Fatalf("Couldn't copy data from doc into the given struct. %v", err)
 	}
 
-	var result T
-	err := mapstructure.Decode(entity, &result)
-	if err != nil {
-		log.Fatalf("Couldn't convert data given struct. %v", err)
-	}
-	return result
+	return MapToStruct[T](entity)
 }
 
 func GetDocArrayData[T any](docArray []*firestore.DocumentSnapshot) []T {
