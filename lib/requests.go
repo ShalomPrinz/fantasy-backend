@@ -51,11 +51,12 @@ func GetByIds[T any](ctx *gin.Context, collection string, ids []string) []T {
 	return utils.GetDocArrayData[T](snaps)
 }
 
-func InsertItem(ctx *gin.Context, collection string, item any) {
-	_, _, err := Client.Collection(collection).Add(ctx, item)
+func InsertItem(ctx *gin.Context, collection string, item any) string {
+	docRef, _, err := Client.Collection(collection).Add(ctx, item)
 	if err != nil {
 		log.Fatalf("Failed adding item to %s collection: %v", collection, err)
 	}
+	return docRef.ID
 }
 
 func InsertItemCustomID(ctx *gin.Context, collection string, id string, item any) {

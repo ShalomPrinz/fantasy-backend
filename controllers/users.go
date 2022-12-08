@@ -41,8 +41,11 @@ func GetUserInfo(ctx *gin.Context) {
 
 	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
 	team := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+	leagues := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
+
 	detailed := entities.DetailedAccount{
 		Entity:   user.Entity,
+		Leagues:  leagues,
 		Nickname: user.Nickname,
 		Team:     team,
 	}
@@ -62,10 +65,17 @@ func NewUser(ctx *gin.Context) {
 		return
 	}
 
-	lib.InsertItemCustomID(ctx, "accounts", UID, entities.AddAccount{
+	lib.InsertItemCustomID(ctx, "accounts", UID, entities.InsertAccount{
+		Leagues:  []string{},
 		Nickname: input.Nickname,
 		Team:     []string{},
 	})
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+// For internal use only
+func signUserToLeague(ctx *gin.Context, UID string, leagueId string) {
+	path := "leagues/" + leagueId
+	lib.InsertItemIntoArray(ctx, "accounts", UID, "Leagues", path)
 }
