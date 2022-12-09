@@ -30,3 +30,27 @@ func NewLeague(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"addedLeague": true})
 }
+
+func GetLeagueInfo(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
+
+	leagueId := ctx.Query("id")
+	if leagueId == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No League ID Supplied"})
+		return
+	}
+
+	league := lib.GetSingle[entities.League](ctx, "leagues", leagueId)
+	if !entities.LeagueContainsMember(league, UID) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "You are not a member of this league"})
+		return
+	}
+
+	members := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
+	detailedLeague := entities.DetailedLeague{
+		Entity:  league.Entity,
+		Members: members,
+		Name:    league.Name,
+	}
+	ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})
+}

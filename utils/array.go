@@ -26,3 +26,16 @@ func arrayHasId[T any](arr []T, id string) bool {
 
 	return false
 }
+
+type fn func(any) string
+
+func ArrayContainsString[T any](arr []T, value string, extractString fn) bool {
+	for _, element := range arr {
+		extractedValue := extractString(element)
+		if extractedValue == value {
+			return true
+		}
+	}
+
+	return false
+}

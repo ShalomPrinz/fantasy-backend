@@ -35,6 +35,7 @@ func main() {
 	router.GET("/teams/:id", controllers.GetTeam)
 	router.POST("/teams", controllers.NewTeam)
 
+	router.GET("/league", controllers.VerifyIdToken, controllers.GetLeagueInfo)
 	router.POST("/leagues", controllers.NewLeague)
 
 	router.POST("/register", controllers.NewUser)
