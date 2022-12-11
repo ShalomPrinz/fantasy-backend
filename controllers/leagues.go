@@ -3,6 +3,7 @@ package controllers
 import (
 	"fantasy/database/entities"
 	"fantasy/database/lib"
+	"fantasy/database/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -46,11 +47,26 @@ func GetLeagueInfo(ctx *gin.Context) {
 		return
 	}
 
-	members := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
+	accounts := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
+
+	mapFunc := func(account entities.Account) entities.Member {
+		return mapAccountToMember(ctx, account)
+	}
+	members := utils.Map(accounts, mapFunc)
+
 	detailedLeague := entities.DetailedLeague{
 		Entity:  league.Entity,
 		Members: members,
 		Name:    league.Name,
 	}
 	ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})
+}
+
+func mapAccountToMember(ctx *gin.Context, account entities.Account) entities.Member {
+	team := lib.GetByIds[entities.Player](ctx, "players", account.Team)
+	return entities.Member{
+		Entity:   account.Entity,
+		Nickname: account.Nickname,
+		Team:     team,
+	}
 }

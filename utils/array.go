@@ -39,3 +39,12 @@ func ArrayContainsString[T any](arr []T, value string, extractString fn) bool {
 
 	return false
 }
+
+/* Returns T array mapped by f function to M array*/
+func Map[T, M any](arr []T, f func(T) M) []M {
+	mapped := make([]M, len(arr))
+	for index, element := range arr {
+		mapped[index] = f(element)
+	}
+	return mapped
+}

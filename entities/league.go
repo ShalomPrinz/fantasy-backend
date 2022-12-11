@@ -19,8 +19,8 @@ type AddLeague struct {
 
 type DetailedLeague struct {
 	Entity  `mapstructure:",squash"`
-	Members []Account `json:"members"`
-	Name    string    `json:"name"`
+	Members []Member `json:"members"`
+	Name    string   `json:"name"`
 }
 
 func getLeagueMemberId(member any) string {

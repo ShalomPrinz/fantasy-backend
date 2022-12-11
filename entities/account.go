@@ -19,6 +19,12 @@ type InsertAccount struct {
 	Team     []string `json:"team"`
 }
 
+type Member struct {
+	Entity   `mapstructure:",squash"`
+	Nickname string   `json:"nickname"`
+	Team     []Player `json:"team"`
+}
+
 type DetailedAccount struct {
 	Entity   `mapstructure:",squash"`
 	Leagues  []League `json:"leagues"`
