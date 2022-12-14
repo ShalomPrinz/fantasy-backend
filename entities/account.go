@@ -27,9 +27,9 @@ type Member struct {
 
 type DetailedAccount struct {
 	Entity   `mapstructure:",squash"`
-	Leagues  []League `json:"leagues"`
-	Nickname string   `json:"nickname"`
-	Team     []Player `json:"team"`
+	Leagues  []LeagueInfo `json:"leagues"`
+	Nickname string       `json:"nickname"`
+	Team     []Player     `json:"team"`
 }
 
 // Firebase Auth database, following auth.UserToCreate struct

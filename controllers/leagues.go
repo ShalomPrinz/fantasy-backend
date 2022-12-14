@@ -10,24 +10,19 @@ import (
 )
 
 func NewLeague(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
+
 	var input entities.AddLeague
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var membersRefs []string
-	for _, memberId := range input.Members {
-		membersRefs = append(membersRefs, "accounts/"+memberId)
-	}
-
-	leagueId := lib.InsertItem(ctx, "leagues", entities.AddLeague{
-		Members: membersRefs, Name: input.Name,
+	memberRef := []string{"accounts/" + UID}
+	leagueId := lib.InsertItem(ctx, "leagues", entities.InsertLeague{
+		Members: memberRef, Name: input.Name,
 	})
-
-	for _, memberId := range input.Members {
-		signUserToLeague(ctx, memberId, leagueId)
-	}
+	signUserToLeague(ctx, UID, leagueId)
 
 	ctx.JSON(http.StatusOK, gin.H{"addedLeague": true})
 }

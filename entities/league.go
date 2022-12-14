@@ -12,7 +12,17 @@ type League struct {
 	Name    string   `json:"name"`
 }
 
+type LeagueInfo struct {
+	Entity       `mapstructure:",squash"`
+	MembersCount int    `json:"membersCount"`
+	Name         string `json:"name"`
+}
+
 type AddLeague struct {
+	Name string `json:"name"`
+}
+
+type InsertLeague struct {
 	Members []string `json:"members"`
 	Name    string   `json:"name"`
 }
@@ -33,4 +43,14 @@ func getLeagueMemberId(member any) string {
 
 func LeagueContainsMember(league League, memberId string) bool {
 	return utils.ArrayContainsString(league.Members, memberId, getLeagueMemberId)
+}
+
+func LeaguesToLeaguesInfo(leagues []League) []LeagueInfo {
+	return utils.Map(leagues, func(l League) LeagueInfo {
+		return LeagueInfo{
+			Entity:       l.Entity,
+			MembersCount: len(l.Members),
+			Name:         l.Name,
+		}
+	})
 }

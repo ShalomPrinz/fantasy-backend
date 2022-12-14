@@ -42,10 +42,11 @@ func GetUserInfo(ctx *gin.Context) {
 	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
 	team := lib.GetByIds[entities.Player](ctx, "players", user.Team)
 	leagues := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
+	leaguesInfo := entities.LeaguesToLeaguesInfo(leagues)
 
 	detailed := entities.DetailedAccount{
 		Entity:   user.Entity,
-		Leagues:  leagues,
+		Leagues:  leaguesInfo,
 		Nickname: user.Nickname,
 		Team:     team,
 	}
