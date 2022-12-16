@@ -19,10 +19,18 @@ func NewLeague(ctx *gin.Context) {
 	}
 
 	memberRef := []string{"accounts/" + UID}
-	leagueId := lib.InsertItem(ctx, "leagues", entities.InsertLeague{
+	leagueId, appError := lib.InsertItem(ctx, "leagues", entities.InsertLeague{
 		Members: memberRef, Name: input.Name,
 	})
-	signUserToLeague(ctx, UID, leagueId)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	if appError = signUserToLeague(ctx, UID, leagueId); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"addedLeague": true})
 }
@@ -32,22 +40,41 @@ func GetLeagueInfo(ctx *gin.Context) {
 
 	leagueId := ctx.Query("id")
 	if leagueId == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No League ID Supplied"})
+		appError := lib.Error(http.StatusBadRequest, "No League ID Supplied")
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
-	league := lib.GetSingle[entities.League](ctx, "leagues", leagueId)
+	league, appError := lib.GetSingle[entities.League](ctx, "leagues", leagueId)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 	if !entities.LeagueContainsMember(league, UID) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "You are not a member of this league"})
+		appError := lib.Error(http.StatusUnauthorized, "You are not a member of this league")
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
-	accounts := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
-
+	accounts, appError := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+	var mapError lib.AppError
 	mapFunc := func(account entities.Account) entities.Member {
-		return mapAccountToMember(ctx, account)
+		if mapError.HasError() {
+			return entities.Member{}
+		}
+
+		member, appError := mapAccountToMember(ctx, account)
+		mapError = appError
+		return member
 	}
 	members := utils.Map(accounts, mapFunc)
+	if mapError.HasError() {
+		return
+	}
 
 	detailedLeague := entities.DetailedLeague{
 		Entity:  league.Entity,
@@ -57,11 +84,15 @@ func GetLeagueInfo(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})
 }
 
-func mapAccountToMember(ctx *gin.Context, account entities.Account) entities.Member {
-	team := lib.GetByIds[entities.Player](ctx, "players", account.Team)
+func mapAccountToMember(ctx *gin.Context, account entities.Account) (entities.Member, lib.AppError) {
+	team, appError := lib.GetByIds[entities.Player](ctx, "players", account.Team)
+	if appError.HasError() {
+		return entities.Member{}, appError
+	}
+
 	return entities.Member{
 		Entity:   account.Entity,
 		Nickname: account.Nickname,
 		Team:     team,
-	}
+	}, lib.EmptyError
 }

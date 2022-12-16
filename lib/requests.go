@@ -7,11 +7,9 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/iterator"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func GetAll[T any](ctx *gin.Context, collection string) []T {
+func GetAll[T any](ctx *gin.Context, collection string) ([]T, AppError) {
 	var result []T
 	iter := Client.Collection(collection).Documents(ctx)
 	for {
@@ -20,72 +18,79 @@ func GetAll[T any](ctx *gin.Context, collection string) []T {
 			break
 		}
 		if err != nil {
-			log.Fatalf("Failed to iterate over %s collection: %v", collection, err)
+			log.Printf("Failed to iterate over %s collection: %v", collection, err)
+			return nil, GetDocumentError(err)
 		}
 		result = append(result, utils.GetDocData[T](doc))
 	}
-	return result
+	return result, EmptyError
 }
 
-func GetSingle[T any](ctx *gin.Context, collection string, id string) T {
+func GetSingle[T any](ctx *gin.Context, collection string, id string) (T, AppError) {
 	doc, err := Client.Collection(collection).Doc(id).Get(ctx)
-	if status.Code(err) == codes.NotFound {
-		log.Fatalf("No such item with id %s in collection %s", id, collection)
-	}
 	if err != nil {
-		log.Fatalf("Unexpected error trying to reach id %s in collection %s", id, collection)
+		log.Printf("Error trying to reach id %s in collection %s", id, collection)
+		var zeroValue T
+		return zeroValue, GetDocumentError(err)
 	}
-
-	return utils.GetDocData[T](doc)
+	return utils.GetDocData[T](doc), EmptyError
 }
 
-func GetByIds[T any](ctx *gin.Context, collection string, ids []string) []T {
+func GetByIds[T any](ctx *gin.Context, collection string, ids []string) ([]T, AppError) {
 	var refs []*firestore.DocumentRef
 	for _, item := range ids {
 		refs = append(refs, Client.Doc(item))
 	}
 	snaps, err := Client.GetAll(ctx, refs)
 	if err != nil {
-		log.Fatalf("Unexpected error getting documents by ids. %v", err)
+		log.Printf("Unexpected error getting documents by ids. %v", err)
+		return nil, GetDocumentError(err)
 	}
-	return utils.GetDocArrayData[T](snaps)
+	return utils.GetDocArrayData[T](snaps), EmptyError
 }
 
-func InsertItem(ctx *gin.Context, collection string, item any) string {
+func InsertItem(ctx *gin.Context, collection string, item any) (string, AppError) {
 	docRef, _, err := Client.Collection(collection).Add(ctx, item)
 	if err != nil {
-		log.Fatalf("Failed adding item to %s collection: %v", collection, err)
+		log.Printf("Failed adding item to %s collection: %v", collection, err)
+		return "", InsertItemError(err)
 	}
-	return docRef.ID
+	return docRef.ID, EmptyError
 }
 
-func InsertItemCustomID(ctx *gin.Context, collection string, id string, item any) {
+func InsertItemCustomID(ctx *gin.Context, collection string, id string, item any) AppError {
 	_, err := Client.Collection(collection).Doc(id).Set(ctx, item)
 	if err != nil {
-		log.Fatalf("Failed adding item to %s collection: %v", collection, err)
+		log.Printf("Failed adding item to %s collection: %v", collection, err)
+		return InsertItemError(err)
 	}
+	return EmptyError
 }
 
-func InsertItemIntoArray(ctx *gin.Context, collection string, doc string, path string, item any) {
+func InsertItemIntoArray(ctx *gin.Context, collection string, doc string, path string, item any) AppError {
 	docs := Client.Collection(collection).Doc(doc)
 	_, err := docs.Update(ctx, []firestore.Update{
 		{Path: path, Value: firestore.ArrayUnion(item)},
 	})
 	if err != nil {
-		log.Fatalf(
+		log.Printf(
 			"Failed adding item to array %v in doc %v in %v collection. %v",
 			path, doc, collection, err)
+		return InsertItemError(err)
 	}
+	return EmptyError
 }
 
-func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path string, item any) {
+func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path string, item any) AppError {
 	docs := Client.Collection(collection).Doc(doc)
 	_, err := docs.Update(ctx, []firestore.Update{
 		{Path: path, Value: firestore.ArrayRemove(item)},
 	})
 	if err != nil {
-		log.Fatalf(
+		log.Printf(
 			"Failed removing item from array %v in doc %v in %v collection. %v",
 			path, doc, collection, err)
+		return RemoveItemError(err)
 	}
+	return EmptyError
 }

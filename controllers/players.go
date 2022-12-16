@@ -10,12 +10,20 @@ import (
 )
 
 func GetPlayers(ctx *gin.Context) {
-	players := lib.GetAll[entities.Player](ctx, "players")
+	players, appError := lib.GetAll[entities.Player](ctx, "players")
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"players": players})
 }
 
 func GetPlayer(ctx *gin.Context) {
-	player := lib.GetSingle[entities.Player](ctx, "players", ctx.Param("id"))
+	player, appError := lib.GetSingle[entities.Player](ctx, "players", ctx.Param("id"))
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"player": player})
 }
 
@@ -26,9 +34,13 @@ func NewPlayer(ctx *gin.Context) {
 		return
 	}
 
-	lib.InsertItem(ctx, "players", entities.GetPlayerEntity(
+	_, appError := lib.InsertItem(ctx, "players", entities.GetPlayerEntity(
 		input.Name, input.Role, input.Team,
 	))
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"addedPlayer": true})
 }

@@ -18,7 +18,11 @@ func AddTeamPlayer(ctx *gin.Context) {
 	}
 
 	path := "players/" + input.ID
-	lib.InsertItemIntoArray(ctx, "accounts", UID, "Team", path)
+	if appError := lib.InsertItemIntoArray(ctx, "accounts", UID, "Team", path); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
@@ -32,21 +36,38 @@ func RemoveTeamPlayer(ctx *gin.Context) {
 	}
 
 	path := "players/" + input.ID
-	lib.RemoveItemFromArray(ctx, "accounts", UID, "Team", path)
+	if appError := lib.RemoveItemFromArray(ctx, "accounts", UID, "Team", path); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
 func GetUserInfo(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
-	user := lib.GetSingle[entities.Account](ctx, "accounts", UID)
-	team := lib.GetByIds[entities.Player](ctx, "players", user.Team)
-	leagues := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
-	leaguesInfo := entities.LeaguesToLeaguesInfo(leagues)
+	user, appError := lib.GetSingle[entities.Account](ctx, "accounts", UID)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	team, appError := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	leagues, appError := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 
 	detailed := entities.DetailedAccount{
 		Entity:   user.Entity,
-		Leagues:  leaguesInfo,
+		Leagues:  entities.LeaguesToLeaguesInfo(leagues),
 		Nickname: user.Nickname,
 		Team:     team,
 	}
@@ -60,23 +81,27 @@ func NewUser(ctx *gin.Context) {
 		return
 	}
 
-	UID, err := lib.CreateUser(ctx, input)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	UID, appError := lib.CreateUser(ctx, input)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
-	lib.InsertItemCustomID(ctx, "accounts", UID, entities.InsertAccount{
+	account := entities.InsertAccount{
 		Leagues:  []string{},
 		Nickname: input.Nickname,
 		Team:     []string{},
-	})
+	}
+	if appError := lib.InsertItemCustomID(ctx, "accounts", UID, account); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
 // For internal use only
-func signUserToLeague(ctx *gin.Context, UID string, leagueId string) {
+func signUserToLeague(ctx *gin.Context, UID string, leagueId string) lib.AppError {
 	path := "leagues/" + leagueId
-	lib.InsertItemIntoArray(ctx, "accounts", UID, "Leagues", path)
+	return lib.InsertItemIntoArray(ctx, "accounts", UID, "Leagues", path)
 }

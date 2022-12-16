@@ -9,12 +9,20 @@ import (
 )
 
 func GetTeams(ctx *gin.Context) {
-	teams := lib.GetAll[entities.Team](ctx, "teams")
+	teams, appError := lib.GetAll[entities.Team](ctx, "teams")
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"teams": teams})
 }
 
 func GetTeam(ctx *gin.Context) {
-	team := lib.GetSingle[entities.Team](ctx, "teams", ctx.Param("id"))
+	team, appError := lib.GetSingle[entities.Team](ctx, "teams", ctx.Param("id"))
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"team": team})
 }
 
@@ -25,8 +33,10 @@ func NewTeam(ctx *gin.Context) {
 		return
 	}
 
-	// For now Team only has ID. Later I will replace this function call
-	lib.InsertItemCustomID(ctx, "teams", input.ID, map[string]interface{}{})
+	if appError := lib.InsertItemCustomID(ctx, "teams", input.ID, map[string]any{}); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"addedTeam": true})
 }

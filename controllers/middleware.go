@@ -15,9 +15,9 @@ func VerifyIdToken(ctx *gin.Context) {
 		return
 	}
 
-	UID, err := lib.GetUidByToken(ctx, idToken)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	UID, appError := lib.GetUidByToken(ctx, idToken)
+	if appError.HasError() {
+		ctx.AbortWithStatusJSON(appError.Code, appError.Json)
 		return
 	}
 
