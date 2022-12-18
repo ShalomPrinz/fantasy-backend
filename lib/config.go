@@ -33,3 +33,17 @@ func InitClient() {
 		log.Fatalln(err)
 	}
 }
+
+func InitTestClient() {
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: "fantasy-database"}
+	app, err := firebase.NewApp(ctx, conf)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	Client, err = app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}

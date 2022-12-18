@@ -34,7 +34,7 @@ func NewPlayer(ctx *gin.Context) {
 		return
 	}
 
-	_, appError := lib.InsertItem(ctx, "players", entities.GetPlayerEntity(
+	_, appError := lib.InsertItem(ctx, "players", entities.GetInsertPlayer(
 		input.Name, input.Role, input.Team,
 	))
 	if appError.HasError() {

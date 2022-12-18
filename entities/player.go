@@ -16,8 +16,15 @@ type AddPlayer struct {
 	Team string `json:"team" binding:"required"`
 }
 
-func GetPlayerEntity(Name string, Role string, Team string) Player {
-	player := Player{
+type InsertPlayer struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Role      string `json:"role"`
+	Team      string `json:"team"`
+}
+
+func GetInsertPlayer(Name string, Role string, Team string) InsertPlayer {
+	player := InsertPlayer{
 		Role: Role,
 		Team: Team,
 	}
