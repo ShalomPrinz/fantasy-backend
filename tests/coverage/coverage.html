@@ -1,0 +1,1083 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>controllers: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">fantasy/database/controllers/leagues.go (0.0%)</option>
+				
+				<option value="file1">fantasy/database/controllers/middleware.go (0.0%)</option>
+				
+				<option value="file2">fantasy/database/controllers/players.go (48.0%)</option>
+				
+				<option value="file3">fantasy/database/controllers/teams.go (0.0%)</option>
+				
+				<option value="file4">fantasy/database/controllers/users.go (0.0%)</option>
+				
+				<option value="file5">fantasy/database/entities/league.go (0.0%)</option>
+				
+				<option value="file6">fantasy/database/entities/player.go (100.0%)</option>
+				
+				<option value="file7">fantasy/database/lib/config.go (30.0%)</option>
+				
+				<option value="file8">fantasy/database/lib/errors.go (23.1%)</option>
+				
+				<option value="file9">fantasy/database/lib/queries.go (0.0%)</option>
+				
+				<option value="file10">fantasy/database/lib/requests.go (19.1%)</option>
+				
+				<option value="file11">fantasy/database/lib/user.go (0.0%)</option>
+				
+				<option value="file12">fantasy/database/tests/utils/requests.go (84.6%)</option>
+				
+				<option value="file13">fantasy/database/utils/array.go (0.0%)</option>
+				
+				<option value="file14">fantasy/database/utils/document.go (40.0%)</option>
+				
+				<option value="file15">fantasy/database/utils/string.go (0.0%)</option>
+				
+				<option value="file16">fantasy/database/utils/struct.go (26.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package controllers
+
+import (
+        "fantasy/database/entities"
+        "fantasy/database/lib"
+        "fantasy/database/utils"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+)
+
+func NewLeague(ctx *gin.Context) <span class="cov0" title="0">{
+        UID := ctx.MustGet("UID").(string)
+
+        var input entities.AddLeague
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">memberRef := []string{"accounts/" + UID}
+        leagueId, appError := lib.InsertItem(ctx, "leagues", entities.InsertLeague{
+                Members: memberRef, Name: input.Name,
+        })
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if appError = signUserToLeague(ctx, UID, leagueId); appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"addedLeague": true})</span>
+}
+
+func GetLeagueInfo(ctx *gin.Context) <span class="cov0" title="0">{
+        UID := ctx.MustGet("UID").(string)
+
+        leagueId := ctx.Query("id")
+        if leagueId == "" </span><span class="cov0" title="0">{
+                appError := lib.Error(http.StatusBadRequest, "No League ID Supplied")
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">league, appError := lib.GetSingle[entities.League](ctx, "leagues", leagueId)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+        <span class="cov0" title="0">if !entities.LeagueContainsMember(league, UID) </span><span class="cov0" title="0">{
+                appError := lib.Error(http.StatusUnauthorized, "You are not a member of this league")
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">accounts, appError := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+        <span class="cov0" title="0">var mapError lib.AppError
+        mapFunc := func(account entities.Account) entities.Member </span><span class="cov0" title="0">{
+                if mapError.HasError() </span><span class="cov0" title="0">{
+                        return entities.Member{}
+                }</span>
+
+                <span class="cov0" title="0">member, appError := mapAccountToMember(ctx, account)
+                mapError = appError
+                return member</span>
+        }
+        <span class="cov0" title="0">members := utils.Map(accounts, mapFunc)
+        if mapError.HasError() </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov0" title="0">detailedLeague := entities.DetailedLeague{
+                Entity:  league.Entity,
+                Members: members,
+                Name:    league.Name,
+        }
+        ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})</span>
+}
+
+func mapAccountToMember(ctx *gin.Context, account entities.Account) (entities.Member, lib.AppError) <span class="cov0" title="0">{
+        team, appError := lib.GetByIds[entities.Player](ctx, "players", account.Team)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                return entities.Member{}, appError
+        }</span>
+
+        <span class="cov0" title="0">return entities.Member{
+                Entity:   account.Entity,
+                Nickname: account.Nickname,
+                Team:     team,
+        }, lib.EmptyError</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package controllers
+
+import (
+        "fantasy/database/lib"
+        "net/http"
+        "os"
+
+        "github.com/gin-gonic/gin"
+)
+
+func VerifyIdToken(ctx *gin.Context) <span class="cov0" title="0">{
+        idToken := ctx.GetHeader(os.Getenv("AUTHHEADER"))
+        if idToken == "" </span><span class="cov0" title="0">{
+                ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No logged in user"})
+                return
+        }</span>
+
+        <span class="cov0" title="0">UID, appError := lib.GetUidByToken(ctx, idToken)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.AbortWithStatusJSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.Set("UID", UID)
+        ctx.Next()</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package controllers
+
+import (
+        "fantasy/database/entities"
+        "fantasy/database/lib"
+        "fantasy/database/utils"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+)
+
+func GetPlayer(ctx *gin.Context) <span class="cov8" title="1">{
+        player, appError := lib.GetSingle[entities.Player](ctx, "players", ctx.Param("id"))
+        if appError.HasError() </span><span class="cov8" title="1">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, gin.H{"player": player})</span>
+}
+
+func NewPlayer(ctx *gin.Context) <span class="cov8" title="1">{
+        var input entities.AddPlayer
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov8" title="1">_, appError := lib.InsertItem(ctx, "players", entities.GetInsertPlayer(
+                input.Name, input.Role, input.Team,
+        ))
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, gin.H{"addedPlayer": true})</span>
+}
+
+func QueryPlayersByName(ctx *gin.Context) <span class="cov0" title="0">{
+        term := ctx.Query("term")
+        if term != "" </span><span class="cov0" title="0">{
+                term = utils.Capitalize(term)
+        }</span>
+        <span class="cov0" title="0">queryLimit := 10
+
+        players := lib.QueryTermInField[entities.Player](ctx, "players", lib.Query{
+                Field: "FirstName",
+                Limit: queryLimit,
+                Term:  term,
+        })
+
+        if len(players) &lt; queryLimit </span><span class="cov0" title="0">{
+                byLastName := lib.QueryTermInField[entities.Player](ctx, "players", lib.Query{
+                        Field: "LastName",
+                        Limit: queryLimit,
+                        Term:  term,
+                })
+                players = utils.ConcatDeduplicate(players, byLastName)
+        }</span>
+
+        <span class="cov0" title="0">if len(players) &gt; queryLimit </span><span class="cov0" title="0">{
+                players = players[:queryLimit]
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"players": players})</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package controllers
+
+import (
+        "fantasy/database/entities"
+        "fantasy/database/lib"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+)
+
+func GetTeams(ctx *gin.Context) <span class="cov0" title="0">{
+        teams, appError := lib.GetAll[entities.Team](ctx, "teams")
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"teams": teams})</span>
+}
+
+func GetTeam(ctx *gin.Context) <span class="cov0" title="0">{
+        team, appError := lib.GetSingle[entities.Team](ctx, "teams", ctx.Param("id"))
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"team": team})</span>
+}
+
+func NewTeam(ctx *gin.Context) <span class="cov0" title="0">{
+        var input entities.AddTeam
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">if appError := lib.InsertItemCustomID(ctx, "teams", input.ID, map[string]any{}); appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"addedTeam": true})</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package controllers
+
+import (
+        "fantasy/database/entities"
+        "fantasy/database/lib"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+)
+
+func AddTeamPlayer(ctx *gin.Context) <span class="cov0" title="0">{
+        UID := ctx.MustGet("UID").(string)
+
+        var input entities.Entity
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">path := "players/" + input.ID
+        if appError := lib.InsertItemIntoArray(ctx, "accounts", UID, "Team", path); appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"status": "success"})</span>
+}
+
+func RemoveTeamPlayer(ctx *gin.Context) <span class="cov0" title="0">{
+        UID := ctx.MustGet("UID").(string)
+
+        var input entities.Entity
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">path := "players/" + input.ID
+        if appError := lib.RemoveItemFromArray(ctx, "accounts", UID, "Team", path); appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"status": "success"})</span>
+}
+
+func GetUserInfo(ctx *gin.Context) <span class="cov0" title="0">{
+        UID := ctx.MustGet("UID").(string)
+
+        user, appError := lib.GetSingle[entities.Account](ctx, "accounts", UID)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">team, appError := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">leagues, appError := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">detailed := entities.DetailedAccount{
+                Entity:   user.Entity,
+                Leagues:  entities.LeaguesToLeaguesInfo(leagues),
+                Nickname: user.Nickname,
+                Team:     team,
+        }
+        ctx.JSON(http.StatusOK, gin.H{"user": detailed})</span>
+}
+
+func NewUser(ctx *gin.Context) <span class="cov0" title="0">{
+        var input entities.AddUser
+        if err := ctx.ShouldBindJSON(&amp;input); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">UID, appError := lib.CreateUser(ctx, input)
+        if appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">account := entities.InsertAccount{
+                Leagues:  []string{},
+                Nickname: input.Nickname,
+                Team:     []string{},
+        }
+        if appError := lib.InsertItemCustomID(ctx, "accounts", UID, account); appError.HasError() </span><span class="cov0" title="0">{
+                ctx.JSON(appError.Code, appError.Json)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx.JSON(http.StatusOK, gin.H{"status": "success"})</span>
+}
+
+// For internal use only
+func signUserToLeague(ctx *gin.Context, UID string, leagueId string) lib.AppError <span class="cov0" title="0">{
+        path := "leagues/" + leagueId
+        return lib.InsertItemIntoArray(ctx, "accounts", UID, "Leagues", path)
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package entities
+
+import (
+        "fantasy/database/utils"
+        "log"
+        "strings"
+)
+
+type League struct {
+        Entity  `mapstructure:",squash"`
+        Members []string `json:"members"`
+        Name    string   `json:"name"`
+}
+
+type LeagueInfo struct {
+        Entity       `mapstructure:",squash"`
+        MembersCount int    `json:"membersCount"`
+        Name         string `json:"name"`
+}
+
+type AddLeague struct {
+        Name string `json:"name"`
+}
+
+type InsertLeague struct {
+        Members []string `json:"members"`
+        Name    string   `json:"name"`
+}
+
+type DetailedLeague struct {
+        Entity  `mapstructure:",squash"`
+        Members []Member `json:"members"`
+        Name    string   `json:"name"`
+}
+
+func getLeagueMemberId(member any) string <span class="cov0" title="0">{
+        id, properCast := member.(string)
+        if !properCast </span><span class="cov0" title="0">{
+                log.Fatal("Error in member cast to account")
+        }</span>
+        <span class="cov0" title="0">return strings.Replace(id, "accounts/", "", 1)</span>
+}
+
+func LeagueContainsMember(league League, memberId string) bool <span class="cov0" title="0">{
+        return utils.ArrayContainsString(league.Members, memberId, getLeagueMemberId)
+}</span>
+
+func LeaguesToLeaguesInfo(leagues []League) []LeagueInfo <span class="cov0" title="0">{
+        return utils.Map(leagues, func(l League) LeagueInfo </span><span class="cov0" title="0">{
+                return LeagueInfo{
+                        Entity:       l.Entity,
+                        MembersCount: len(l.Members),
+                        Name:         l.Name,
+                }
+        }</span>)
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package entities
+
+import "strings"
+
+type Player struct {
+        Entity    `mapstructure:",squash"`
+        FirstName string `json:"firstName"`
+        LastName  string `json:"lastName"`
+        Role      string `json:"role"`
+        Team      string `json:"team"`
+}
+
+type AddPlayer struct {
+        Name string `json:"name" binding:"required"`
+        Role string `json:"role" binding:"required"`
+        Team string `json:"team" binding:"required"`
+}
+
+type InsertPlayer struct {
+        FirstName string `json:"firstName"`
+        LastName  string `json:"lastName"`
+        Role      string `json:"role"`
+        Team      string `json:"team"`
+}
+
+func GetInsertPlayer(Name string, Role string, Team string) InsertPlayer <span class="cov8" title="1">{
+        player := InsertPlayer{
+                Role: Role,
+                Team: Team,
+        }
+
+        firstName := Name
+        lastName := ""
+
+        if strings.Contains(firstName, " ") </span><span class="cov8" title="1">{
+                split := strings.SplitN(firstName, " ", 2)
+                firstName = split[0]
+                lastName = split[1]
+                player.LastName = lastName
+        }</span>
+
+        <span class="cov8" title="1">player.FirstName = firstName
+        return player</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package lib
+
+import (
+        "context"
+        "log"
+        "os"
+
+        "cloud.google.com/go/firestore"
+        firebase "firebase.google.com/go"
+        "firebase.google.com/go/auth"
+        "google.golang.org/api/option"
+)
+
+var Client *firestore.Client
+var Auth *auth.Client
+
+func InitClient() <span class="cov0" title="0">{
+        ctx := context.Background()
+        conf := &amp;firebase.Config{ProjectID: os.Getenv("PROJID")}
+        sa := option.WithCredentialsFile(os.Getenv("CREDPATH"))
+        app, err := firebase.NewApp(ctx, conf, sa)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+
+        <span class="cov0" title="0">Client, err = app.Firestore(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+
+        <span class="cov0" title="0">Auth, err = app.Auth(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+}
+
+func InitTestClient() <span class="cov8" title="1">{
+        ctx := context.Background()
+        conf := &amp;firebase.Config{ProjectID: "fantasy-database"}
+        app, err := firebase.NewApp(ctx, conf)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+
+        <span class="cov8" title="1">Client, err = app.Firestore(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package lib
+
+import (
+        "net/http"
+        "strings"
+
+        "firebase.google.com/go/auth"
+        "github.com/gin-gonic/gin"
+        "google.golang.org/grpc/codes"
+        "google.golang.org/grpc/status"
+)
+
+type AppError struct {
+        Code int
+        Json gin.H
+}
+
+var EmptyError AppError
+
+func (err AppError) HasError() bool <span class="cov8" title="1">{
+        return err.Code != 0
+}</span>
+
+func Error(code int, message string) AppError <span class="cov8" title="1">{
+        return AppError{
+                Code: code,
+                Json: gin.H{"error": message},
+        }
+}</span>
+
+const (
+        serverErrorCode    = http.StatusInternalServerError
+        serverErrorMessage = "internal-server-error"
+)
+
+var (
+        genericServerError = AppError{
+                Code: serverErrorCode,
+                Json: gin.H{"error": serverErrorMessage},
+        }
+)
+
+func CreateUserError(err error) AppError <span class="cov0" title="0">{
+        code, message := serverErrorCode, serverErrorMessage
+
+        if auth.IsEmailAlreadyExists(err) </span><span class="cov0" title="0">{
+                code, message = http.StatusBadRequest, "email-already-exists"
+        }</span> else<span class="cov0" title="0"> if auth.IsInvalidEmail(err) </span><span class="cov0" title="0">{
+                code, message = http.StatusUnprocessableEntity, "invalid-email"
+        }</span>
+
+        <span class="cov0" title="0">return Error(code, message)</span>
+}
+
+func GetDocumentError(err error) AppError <span class="cov8" title="1">{
+        code, message := serverErrorCode, serverErrorMessage
+
+        if status.Code(err) == codes.NotFound </span><span class="cov8" title="1">{
+                code, message = http.StatusNotFound, "not-found"
+        }</span>
+
+        <span class="cov8" title="1">return Error(code, message)</span>
+}
+
+func InsertItemError(err error) AppError <span class="cov0" title="0">{
+        return genericServerError
+}</span>
+
+func RemoveItemError(err error) AppError <span class="cov0" title="0">{
+        return genericServerError
+}</span>
+
+func VerifyTokenError(err error) AppError <span class="cov0" title="0">{
+        code, message := serverErrorCode, serverErrorMessage
+
+        if strings.Contains(err.Error(), "ID token has expired at:") </span><span class="cov0" title="0">{
+                code, message = http.StatusUnauthorized, "id-token-expired"
+        }</span> else<span class="cov0" title="0"> if strings.Contains(err.Error(), "ID token issued at future timestamp:") </span><span class="cov0" title="0">{
+                code, message = http.StatusUnauthorized, "id-token-expired"
+        }</span> else<span class="cov0" title="0"> if auth.IsIDTokenRevoked(err) </span><span class="cov0" title="0">{
+                code, message = http.StatusUnauthorized, "id-token-revoked"
+        }</span> else<span class="cov0" title="0"> if auth.IsSessionCookieRevoked(err) </span><span class="cov0" title="0">{
+                code, message = http.StatusUnauthorized, "session-cookie-revoked"
+        }</span> else<span class="cov0" title="0"> if auth.IsUserNotFound(err) </span><span class="cov0" title="0">{
+                code, message = http.StatusNotFound, "user-not-found"
+        }</span>
+
+        <span class="cov0" title="0">return Error(code, message)</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package lib
+
+import (
+        "fantasy/database/utils"
+        "log"
+
+        "cloud.google.com/go/firestore"
+        "github.com/gin-gonic/gin"
+        "google.golang.org/api/iterator"
+)
+
+type Query struct {
+        Field string
+        Limit int
+        Term  string
+}
+
+func QueryTermInField[T any](ctx *gin.Context, collection string, q Query) []T <span class="cov0" title="0">{
+        var result []T
+        iter := Client.Collection(collection).
+                Where(q.Field, "&gt;=", q.Term).
+                Where(q.Field, "&lt;=", q.Term+"\uf8ff").
+                OrderBy(q.Field, firestore.Asc).
+                Limit(q.Limit).
+                Documents(ctx)
+
+        for </span><span class="cov0" title="0">{
+                doc, err := iter.Next()
+                if err == iterator.Done </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        log.Fatalf("Failed to iterate over %s collection: %v", collection, err)
+                }</span>
+                <span class="cov0" title="0">result = append(result, utils.GetDocData[T](doc))</span>
+        }
+        <span class="cov0" title="0">return result</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package lib
+
+import (
+        "fantasy/database/utils"
+        "log"
+
+        "cloud.google.com/go/firestore"
+        "github.com/gin-gonic/gin"
+        "google.golang.org/api/iterator"
+)
+
+func GetAll[T any](ctx *gin.Context, collection string) ([]T, AppError) <span class="cov0" title="0">{
+        var result []T
+        iter := Client.Collection(collection).Documents(ctx)
+        for </span><span class="cov0" title="0">{
+                doc, err := iter.Next()
+                if err == iterator.Done </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        log.Printf("Failed to iterate over %s collection: %v", collection, err)
+                        return nil, GetDocumentError(err)
+                }</span>
+                <span class="cov0" title="0">result = append(result, utils.GetDocData[T](doc))</span>
+        }
+        <span class="cov0" title="0">return result, EmptyError</span>
+}
+
+func GetSingle[T any](ctx *gin.Context, collection string, id string) (T, AppError) <span class="cov8" title="1">{
+        doc, err := Client.Collection(collection).Doc(id).Get(ctx)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Printf("Error trying to reach id %s in collection %s", id, collection)
+                var zeroValue T
+                return zeroValue, GetDocumentError(err)
+        }</span>
+        <span class="cov8" title="1">return utils.GetDocData[T](doc), EmptyError</span>
+}
+
+func GetByIds[T any](ctx *gin.Context, collection string, ids []string) ([]T, AppError) <span class="cov0" title="0">{
+        var refs []*firestore.DocumentRef
+        for _, item := range ids </span><span class="cov0" title="0">{
+                refs = append(refs, Client.Doc(item))
+        }</span>
+        <span class="cov0" title="0">snaps, err := Client.GetAll(ctx, refs)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Unexpected error getting documents by ids. %v", err)
+                return nil, GetDocumentError(err)
+        }</span>
+        <span class="cov0" title="0">return utils.GetDocArrayData[T](snaps), EmptyError</span>
+}
+
+func InsertItem(ctx *gin.Context, collection string, item any) (string, AppError) <span class="cov8" title="1">{
+        docRef, _, err := Client.Collection(collection).Add(ctx, item)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed adding item to %s collection: %v", collection, err)
+                return "", InsertItemError(err)
+        }</span>
+        <span class="cov8" title="1">return docRef.ID, EmptyError</span>
+}
+
+func InsertItemCustomID(ctx *gin.Context, collection string, id string, item any) AppError <span class="cov0" title="0">{
+        _, err := Client.Collection(collection).Doc(id).Set(ctx, item)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed adding item to %s collection: %v", collection, err)
+                return InsertItemError(err)
+        }</span>
+        <span class="cov0" title="0">return EmptyError</span>
+}
+
+func InsertItemIntoArray(ctx *gin.Context, collection string, doc string, path string, item any) AppError <span class="cov0" title="0">{
+        docs := Client.Collection(collection).Doc(doc)
+        _, err := docs.Update(ctx, []firestore.Update{
+                {Path: path, Value: firestore.ArrayUnion(item)},
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf(
+                        "Failed adding item to array %v in doc %v in %v collection. %v",
+                        path, doc, collection, err)
+                return InsertItemError(err)
+        }</span>
+        <span class="cov0" title="0">return EmptyError</span>
+}
+
+func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path string, item any) AppError <span class="cov0" title="0">{
+        docs := Client.Collection(collection).Doc(doc)
+        _, err := docs.Update(ctx, []firestore.Update{
+                {Path: path, Value: firestore.ArrayRemove(item)},
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf(
+                        "Failed removing item from array %v in doc %v in %v collection. %v",
+                        path, doc, collection, err)
+                return RemoveItemError(err)
+        }</span>
+        <span class="cov0" title="0">return EmptyError</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package lib
+
+import (
+        "fantasy/database/entities"
+        "log"
+
+        "firebase.google.com/go/auth"
+        "github.com/gin-gonic/gin"
+)
+
+func CreateUser(ctx *gin.Context, props entities.AddUser) (string, AppError) <span class="cov0" title="0">{
+        params := (&amp;auth.UserToCreate{}).
+                DisplayName(props.FullName).
+                Email(props.Email).
+                Password(props.Password)
+
+        user, err := Auth.CreateUser(ctx, params)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("error creating user: %v\n", err)
+                return "", CreateUserError(err)
+        }</span>
+        <span class="cov0" title="0">return user.UID, EmptyError</span>
+}
+
+func GetUidByToken(ctx *gin.Context, idToken string) (string, AppError) <span class="cov0" title="0">{
+        decoded, err := Auth.VerifyIDTokenAndCheckRevoked(ctx, idToken)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("ID Token %v is invalid. %v", idToken[:10], err)
+                return "", VerifyTokenError(err)
+        }</span>
+        <span class="cov0" title="0">return decoded.UID, EmptyError</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package utils
+
+import (
+        "bytes"
+        "encoding/json"
+        "io"
+        "net/http"
+)
+
+const (
+        baseUrl = "http://localhost:8080/"
+)
+
+func encodeStruct(value any) *bytes.Buffer <span class="cov8" title="1">{
+        jsonValue, _ := json.Marshal(value)
+        return bytes.NewBuffer(jsonValue)
+}</span>
+
+func decodeBody(resBody io.ReadCloser, target any) error <span class="cov8" title="1">{
+        return json.NewDecoder(resBody).Decode(&amp;target)
+}</span>
+
+func Get(path string, response any) error <span class="cov8" title="1">{
+        res, err := http.Get(baseUrl + path)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        return decodeBody(res.Body, &amp;response)</span>
+}
+
+func Post(path string, value any, response any) error <span class="cov8" title="1">{
+        res, err := http.Post(baseUrl+path, "application/json", encodeStruct(value))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        return decodeBody(res.Body, &amp;response)</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package utils
+
+// Returns new array and removes duplication of objects in array.
+// Note: duplication is checked via id property on each object
+func ConcatDeduplicate[T any](first []T, second []T) []T <span class="cov0" title="0">{
+        var withoutDups []T
+
+        for _, element := range second </span><span class="cov0" title="0">{
+                id := GetStringFromStruct(element, "ID")
+
+                if !arrayHasId(first, id) </span><span class="cov0" title="0">{
+                        withoutDups = append(withoutDups, element)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return append(first, withoutDups...)</span>
+}
+
+func arrayHasId[T any](arr []T, id string) bool <span class="cov0" title="0">{
+        for _, element := range arr </span><span class="cov0" title="0">{
+                elementId := GetStringFromStruct(element, "ID")
+                if elementId == id </span><span class="cov0" title="0">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+type fn func(any) string
+
+func ArrayContainsString[T any](arr []T, value string, extractString fn) bool <span class="cov0" title="0">{
+        for _, element := range arr </span><span class="cov0" title="0">{
+                extractedValue := extractString(element)
+                if extractedValue == value </span><span class="cov0" title="0">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+/* Returns T array mapped by f function to M array*/
+func Map[T, M any](arr []T, f func(T) M) []M <span class="cov0" title="0">{
+        mapped := make([]M, len(arr))
+        for index, element := range arr </span><span class="cov0" title="0">{
+                mapped[index] = f(element)
+        }</span>
+        <span class="cov0" title="0">return mapped</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package utils
+
+import (
+        "log"
+
+        "cloud.google.com/go/firestore"
+)
+
+func GetDocData[T any](doc *firestore.DocumentSnapshot) T <span class="cov8" title="1">{
+        if !doc.Exists() </span><span class="cov0" title="0">{
+                log.Fatalf("Given document %v doesn't exist, couldn't return its data", doc.Ref.Path)
+        }</span>
+
+        <span class="cov8" title="1">entity := map[string]any{
+                "ID": doc.Ref.ID,
+        }
+
+        if err := doc.DataTo(&amp;entity); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Couldn't copy data from doc into the given struct. %v", err)
+        }</span>
+
+        <span class="cov8" title="1">return MapToStruct[T](entity)</span>
+}
+
+func GetDocArrayData[T any](docArray []*firestore.DocumentSnapshot) []T <span class="cov0" title="0">{
+        var result []T
+        for _, item := range docArray </span><span class="cov0" title="0">{
+                result = append(result, GetDocData[T](item))
+        }</span>
+        <span class="cov0" title="0">return result</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package utils
+
+import (
+        "strings"
+        "unicode"
+)
+
+// Returns given string, first letter upper case and the rest lower case
+func Capitalize(s string) string <span class="cov0" title="0">{
+        var first rune
+        for _, c := range s </span><span class="cov0" title="0">{
+                first = unicode.ToUpper(c)
+                break</span>
+        }
+        <span class="cov0" title="0">rest := strings.ToLower(s[1:])
+        return string(first) + rest</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package utils
+
+import (
+        "log"
+
+        "github.com/mitchellh/mapstructure"
+)
+
+func MapToStruct[T any](_map map[string]any) T <span class="cov8" title="1">{
+        var _struct T
+        err := mapstructure.Decode(_map, &amp;_struct)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Couldn't convert given map to struct. %v", err)
+        }</span>
+        <span class="cov8" title="1">return _struct</span>
+}
+
+func StructToMap[T any](_struct T) map[string]any <span class="cov0" title="0">{
+        var _map map[string]any
+        err := mapstructure.Decode(_struct, &amp;_map)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Couldn't convert given struct to map. %v", err)
+        }</span>
+        <span class="cov0" title="0">return _map</span>
+}
+
+func GetStringFromStruct[T any](_struct T, field string) string <span class="cov0" title="0">{
+        _map := StructToMap(_struct)
+        str, properCast := _map[field].(string)
+        if !properCast </span><span class="cov0" title="0">{
+                log.Fatalf("Couldn't convert field %v value to string in struct %v", field, _struct)
+        }</span>
+        <span class="cov0" title="0">return str</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -1,10 +1,23 @@
-Test Instructions
+# Test Instructions
 
-First of all, activate firestore emulator by calling
-    **firebase emulators:start --import=./data**
+**All commands should be executed from tests folder.**
 
-Note that you need to do it from ./tests/firebase,
-as this directory contains all the info about the emulator
+## Emulator
 
-Then you can actually test everything by calling
-    **go test**
+First of all, activate firestore emulator:
+    
+    bash start_emulator.sh
+
+Note that you need to do it from ./tests/firebase, as this directory contains all the info about the emulator.
+
+Some tests might fail without the startup data, which happens if you forget adding the ***--import=./data*** part to the command
+
+## Test
+
+Then you can actually test everything:
+    
+    go test
+
+## Coverage
+
+    bash coverage.sh

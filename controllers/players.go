@@ -9,15 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetPlayers(ctx *gin.Context) {
-	players, appError := lib.GetAll[entities.Player](ctx, "players")
-	if appError.HasError() {
-		ctx.JSON(appError.Code, appError.Json)
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"players": players})
-}
-
 func GetPlayer(ctx *gin.Context) {
 	player, appError := lib.GetSingle[entities.Player](ctx, "players", ctx.Param("id"))
 	if appError.HasError() {
