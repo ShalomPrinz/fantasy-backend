@@ -31,10 +31,6 @@ func main() {
 	router.GET("/players/query", controllers.QueryPlayersByName)
 	router.POST("/players", controllers.NewPlayer)
 
-	router.GET("/teams", controllers.GetTeams)
-	router.GET("/teams/:id", controllers.GetTeam)
-	router.POST("/teams", controllers.NewTeam)
-
 	router.GET("/league", controllers.VerifyIdToken, controllers.GetLeagueInfo)
 	router.POST("/newleague", controllers.VerifyIdToken, controllers.NewLeague)
 

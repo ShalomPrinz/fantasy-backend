@@ -1,8 +1,1 @@
-{
-  "projects": {
-    "default": "fantasy-database",
-    "fantasy-project": "fantasy-database"
-  },
-  "targets": {},
-  "etags": {}
-}
+{}

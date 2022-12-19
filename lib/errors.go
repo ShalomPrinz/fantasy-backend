@@ -47,6 +47,8 @@ func CreateUserError(err error) AppError {
 		code, message = http.StatusBadRequest, "email-already-exists"
 	} else if auth.IsInvalidEmail(err) {
 		code, message = http.StatusUnprocessableEntity, "invalid-email"
+	} else if auth.IsProjectNotFound(err) {
+		code, message = http.StatusServiceUnavailable, "project-not-found"
 	}
 
 	return Error(code, message)

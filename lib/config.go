@@ -36,7 +36,7 @@ func InitClient() {
 
 func InitTestClient() {
 	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: "fantasy-database"}
+	conf := &firebase.Config{ProjectID: "demo-test-fantasy"}
 	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
 		log.Fatalln(err)
