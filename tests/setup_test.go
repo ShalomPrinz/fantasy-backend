@@ -15,6 +15,7 @@ func initTestRouter() {
 	router := gin.Default()
 
 	router.GET("/players/:id", controllers.GetPlayer)
+	router.GET("/players/query", controllers.QueryPlayersByName)
 	router.POST("/players", controllers.NewPlayer)
 
 	go router.Run(":8080")
@@ -25,6 +26,7 @@ func TestMain(m *testing.M) {
 	lib.InitTestClient()
 	defer lib.Client.Close()
 	initTestRouter()
+	resetData(func() { panic("") })
 
 	code := m.Run()
 

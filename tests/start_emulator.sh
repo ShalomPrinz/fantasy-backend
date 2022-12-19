@@ -1,2 +1,2 @@
 cd ./firebase
-firebase emulators:start --import=./data --project demo-test-fantasy
+firebase emulators:start --project demo-test-fantasy

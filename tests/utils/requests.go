@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -38,4 +39,21 @@ func Post(path string, value any, response any) error {
 	defer res.Body.Close()
 
 	return decodeBody(res.Body, &response)
+}
+
+func Delete(path string) error {
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodDelete, path, nil)
+	if err != nil {
+		fmt.Println("Creating delete request failed. Given url:", path)
+		return err
+	}
+
+	_, err = client.Do(req)
+	if err != nil {
+		fmt.Println("Delete failed. Given url:", path)
+		return err
+	}
+
+	return nil
 }
