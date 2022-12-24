@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"firebase.google.com/go/auth"
+	"firebase.google.com/go/v4/auth"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,7 +43,11 @@ var (
 func CreateUserError(err error) AppError {
 	code, message := serverErrorCode, serverErrorMessage
 
-	if auth.IsEmailAlreadyExists(err) {
+	if strings.Contains(err.Error(), "display name must be a non-empty string") {
+		code, message = http.StatusBadRequest, "missing-request-data"
+	} else if err.Error() == "password must be a string at least 6 characters long" {
+		code, message = http.StatusBadRequest, "password-too-short"
+	} else if auth.IsEmailAlreadyExists(err) {
 		code, message = http.StatusBadRequest, "email-already-exists"
 	} else if auth.IsInvalidEmail(err) {
 		code, message = http.StatusUnprocessableEntity, "invalid-email"

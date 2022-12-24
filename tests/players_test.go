@@ -39,16 +39,9 @@ func postPlayer(failTest func()) (map[string]any, string) {
 	}, playerId
 }
 
-func resetData(failTest func()) {
-	deleteDataUrl := "http://localhost:8090/emulator/v1/projects/demo-test-fantasy/databases/(default)/documents"
-	err := testUtils.Delete(deleteDataUrl)
-	if err != nil {
-		fmt.Println("Reset data: Failed deleting data")
-		failTest()
-	}
-}
-
 func TestGetPlayer(t *testing.T) {
+	beforeEach(t.FailNow)
+
 	playerSent, playerId := postPlayer(t.FailNow)
 
 	var playerReceived any
@@ -65,6 +58,8 @@ func TestGetPlayer(t *testing.T) {
 }
 
 func TestGetPlayer_NotExists(t *testing.T) {
+	beforeEach(t.FailNow)
+
 	var actualPlayer any
 	err := testUtils.Get("players/fake_id", &actualPlayer)
 	if err != nil {
@@ -79,6 +74,8 @@ func TestGetPlayer_NotExists(t *testing.T) {
 }
 
 func TestNewPlayer(t *testing.T) {
+	beforeEach(t.FailNow)
+
 	var response any
 	err := testUtils.Post("players", player, &response)
 	if err != nil {
@@ -93,6 +90,8 @@ func TestNewPlayer(t *testing.T) {
 }
 
 func TestNewPlayer_NoData(t *testing.T) {
+	beforeEach(t.FailNow)
+
 	var response any
 	err := testUtils.Post("players", entities.AddPlayer{}, &response)
 	if err != nil {
@@ -107,7 +106,7 @@ func TestNewPlayer_NoData(t *testing.T) {
 }
 
 func TestQueryPlayers_NoTerm(t *testing.T) {
-	resetData(t.FailNow)
+	beforeEach(t.FailNow)
 
 	var queryResult any
 	err := testUtils.Get("players/query", &queryResult)
@@ -123,7 +122,8 @@ func TestQueryPlayers_NoTerm(t *testing.T) {
 }
 
 func TestQueryPlayers_TermExists(t *testing.T) {
-	resetData(t.FailNow)
+	beforeEach(t.FailNow)
+
 	storedPlayer, _ := postPlayer(t.FailNow)
 
 	var queryResult any
@@ -140,7 +140,8 @@ func TestQueryPlayers_TermExists(t *testing.T) {
 }
 
 func TestQueryPlayers_TermNotExists(t *testing.T) {
-	resetData(t.FailNow)
+	beforeEach(t.FailNow)
+
 	postPlayer(t.FailNow)
 
 	var queryResult any

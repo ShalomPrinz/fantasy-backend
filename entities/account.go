@@ -34,10 +34,10 @@ type DetailedAccount struct {
 
 // Firebase Auth database, following auth.UserToCreate struct
 type AddUser struct {
-	FullName string
-	Nickname string
-	Email    string
-	Password string
+	FullName string `binding:"required"`
+	Nickname string `binding:"required"`
+	Email    string `binding:"required"`
+	Password string `binding:"required"`
 }
 
 type LoginUser struct {
