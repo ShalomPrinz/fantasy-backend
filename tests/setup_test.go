@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func resetAuthenticaion(failTest func()) {
@@ -44,12 +45,18 @@ func initTestRouter() {
 	router.POST("/players", controllers.NewPlayer)
 
 	router.POST("/register", controllers.NewUser)
+	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
 	go router.Run(":8080")
 	time.Sleep(50 * time.Millisecond)
 }
 
 func TestMain(m *testing.M) {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		panic(err)
+	}
+
 	lib.InitTestClient()
 	defer lib.Client.Close()
 	initTestRouter()

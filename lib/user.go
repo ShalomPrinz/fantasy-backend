@@ -25,7 +25,7 @@ func CreateUser(ctx *gin.Context, props entities.AddUser) (string, AppError) {
 func GetUidByToken(ctx *gin.Context, idToken string) (string, AppError) {
 	decoded, err := Auth.VerifyIDTokenAndCheckRevoked(ctx, idToken)
 	if err != nil {
-		log.Printf("ID Token %v is invalid. %v", idToken[:10], err)
+		log.Printf("ID Token is invalid: %v\n", err)
 		return "", VerifyTokenError(err)
 	}
 	return decoded.UID, EmptyError

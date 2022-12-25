@@ -43,7 +43,7 @@ var (
 func CreateUserError(err error) AppError {
 	code, message := serverErrorCode, serverErrorMessage
 
-	if strings.Contains(err.Error(), "display name must be a non-empty string") {
+	if strings.Contains(err.Error(), "must be a non-empty string") {
 		code, message = http.StatusBadRequest, "missing-request-data"
 	} else if err.Error() == "password must be a string at least 6 characters long" {
 		code, message = http.StatusBadRequest, "password-too-short"
@@ -79,7 +79,9 @@ func RemoveItemError(err error) AppError {
 func VerifyTokenError(err error) AppError {
 	code, message := serverErrorCode, serverErrorMessage
 
-	if strings.Contains(err.Error(), "ID token has expired at:") {
+	if strings.Contains(err.Error(), "must be a non-empty string") {
+		code, message = http.StatusUnauthorized, "id-token-missing"
+	} else if strings.Contains(err.Error(), "ID token has expired at:") {
 		code, message = http.StatusUnauthorized, "id-token-expired"
 	} else if strings.Contains(err.Error(), "ID token issued at future timestamp:") {
 		code, message = http.StatusUnauthorized, "id-token-expired"
