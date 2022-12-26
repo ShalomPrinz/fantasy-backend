@@ -45,6 +45,8 @@ func initTestRouter() {
 	router.POST("/players", controllers.NewPlayer)
 
 	router.POST("/register", controllers.NewUser)
+	router.POST("/user/addplayer", controllers.VerifyIdToken, controllers.AddTeamPlayer)
+	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
 	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
 	go router.Run(":8080")

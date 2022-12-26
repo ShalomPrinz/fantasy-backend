@@ -17,6 +17,11 @@ func AddTeamPlayer(ctx *gin.Context) {
 		return
 	}
 
+	if !isPlayerExists(ctx, input.ID) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no-such-player"})
+		return
+	}
+
 	path := "players/" + input.ID
 	if appError := lib.InsertItemIntoArray(ctx, "accounts", UID, "Team", path); appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
@@ -32,6 +37,11 @@ func RemoveTeamPlayer(ctx *gin.Context) {
 	var input entities.Entity
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !isPlayerExists(ctx, input.ID) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no-such-player"})
 		return
 	}
 

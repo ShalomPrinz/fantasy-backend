@@ -9,6 +9,19 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+func IsExists(ctx *gin.Context, collection string, id string) bool {
+	_, err := Client.Collection(collection).Doc(id).Get(ctx)
+	if err != nil {
+		if isStatusNotFound(err) {
+			return false
+		} else {
+			log.Printf("Error checking if id %s exists in collection %s. The result might be corrupted", id, collection)
+			return false
+		}
+	}
+	return true
+}
+
 func GetAll[T any](ctx *gin.Context, collection string) ([]T, AppError) {
 	var result []T
 	iter := Client.Collection(collection).Documents(ctx)

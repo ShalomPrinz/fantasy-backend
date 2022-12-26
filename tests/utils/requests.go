@@ -14,7 +14,10 @@ const (
 	firestoreUrl = "http://localhost:8080/"
 )
 
-func encodeStruct(value any) *bytes.Buffer {
+func encodeStruct(value any) io.Reader {
+	if value == nil {
+		return nil
+	}
 	jsonValue, _ := json.Marshal(value)
 	return bytes.NewBuffer(jsonValue)
 }
@@ -34,15 +37,23 @@ func Get(path string, response any) error {
 }
 
 func GetWithToken(path string, loginDetails LoginUser, response any) error {
+	return requestWithToken(http.MethodGet, path, nil, loginDetails, response)
+}
+
+func PostWithToken(path string, data any, loginDetails LoginUser, response any) error {
+	return requestWithToken(http.MethodPost, path, data, loginDetails, response)
+}
+
+func requestWithToken(method string, path string, data any, loginDetails LoginUser, response any) error {
 	token, err := GenerateIdToken(loginDetails)
 	if err != nil {
 		return err
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, firestoreUrl+path, nil)
+	req, err := http.NewRequest(method, firestoreUrl+path, encodeStruct(data))
 	if err != nil {
-		fmt.Println("Creating get request failed. Given url:", path)
+		fmt.Printf("Creating %v request failed. Given url: %v\n", method, path)
 		return err
 	}
 
@@ -50,7 +61,7 @@ func GetWithToken(path string, loginDetails LoginUser, response any) error {
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Get request failed. Given url:", path, err)
+		fmt.Printf("%v request failed. Given url: %v. %v", method, path, err)
 		return err
 	}
 	defer res.Body.Close()

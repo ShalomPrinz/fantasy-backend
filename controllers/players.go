@@ -36,6 +36,10 @@ func NewPlayer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"playerId": playerId})
 }
 
+func isPlayerExists(ctx *gin.Context, id string) bool {
+	return lib.IsExists(ctx, "players", id)
+}
+
 func QueryPlayersByName(ctx *gin.Context) {
 	term := ctx.Query("term")
 	if term != "" {

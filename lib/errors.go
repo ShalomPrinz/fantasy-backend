@@ -28,6 +28,10 @@ func Error(code int, message string) AppError {
 	}
 }
 
+func isStatusNotFound(err error) bool {
+	return status.Code(err) == codes.NotFound
+}
+
 const (
 	serverErrorCode    = http.StatusInternalServerError
 	serverErrorMessage = "internal-server-error"
@@ -61,7 +65,7 @@ func CreateUserError(err error) AppError {
 func GetDocumentError(err error) AppError {
 	code, message := serverErrorCode, serverErrorMessage
 
-	if status.Code(err) == codes.NotFound {
+	if isStatusNotFound(err) {
 		code, message = http.StatusNotFound, "not-found"
 	}
 
