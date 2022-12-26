@@ -99,3 +99,16 @@ func VerifyTokenError(err error) AppError {
 
 	return Error(code, message)
 }
+
+func JsonBindingError(err error) AppError {
+	code, message := serverErrorCode, serverErrorMessage
+
+	if strings.Contains(err.Error(), "Error:Field validation for") &&
+		strings.Contains(err.Error(), "failed on the 'required' tag") {
+		code, message = http.StatusBadRequest, "missing-request-data"
+	} else {
+		code, message = http.StatusInternalServerError, "data-binding-failure"
+	}
+
+	return Error(code, message)
+}

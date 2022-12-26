@@ -13,8 +13,8 @@ func NewLeague(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
 	var input entities.AddLeague
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 

@@ -12,8 +12,8 @@ func AddTeamPlayer(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
 	var input entities.Entity
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
@@ -35,8 +35,8 @@ func RemoveTeamPlayer(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
 	var input entities.Entity
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
@@ -86,8 +86,8 @@ func GetUserInfo(ctx *gin.Context) {
 
 func NewUser(ctx *gin.Context) {
 	var input entities.AddUser
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
