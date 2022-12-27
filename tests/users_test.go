@@ -11,6 +11,16 @@ import (
 )
 
 var (
+	getUserInfoUrl = testUtils.Url{
+		Path: "user",
+	}
+	userAddPlayerUrl = testUtils.Url{
+		Path: "user/addplayer",
+	}
+	userRemovePlayerUrl = testUtils.Url{
+		Path: "user/removeplayer",
+	}
+
 	user = entities.AddUser{
 		FullName: "Test User",
 		Nickname: "Testy",
@@ -22,6 +32,18 @@ var (
 		Email:    user.Email,
 		Password: user.Password,
 	}
+
+	otherUser = entities.AddUser{
+		FullName: "Other User",
+		Nickname: "Someone",
+		Email:    "other@user.test",
+		Password: "usertest",
+	}
+
+	otherLoginDetails = testUtils.LoginUser{
+		Email:    otherUser.Email,
+		Password: otherUser.Password,
+	}
 )
 
 func postUser(failTest func(), response any) {
@@ -32,9 +54,17 @@ func postUser(failTest func(), response any) {
 	}
 }
 
+func postOtherUser(failTest func(), response any) {
+	err := testUtils.Post("register", otherUser, &response)
+	if err != nil {
+		fmt.Println("Request failed for register user")
+		failTest()
+	}
+}
+
 func getUser(failTest func()) entities.DetailedAccount {
 	var response map[string]any
-	err := testUtils.GetWithToken("user", loginDetails, &response)
+	err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response)
 	if err != nil {
 		fmt.Println("Request failed for get user info")
 		failTest()
@@ -80,7 +110,7 @@ func TestGetUserInfo(t *testing.T) {
 	postUser(t.FailNow, nil)
 
 	var response any
-	err := testUtils.GetWithToken("user", loginDetails, &response)
+	err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response)
 	if err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
@@ -102,7 +132,7 @@ func TestGetUserInfo_NotExists(t *testing.T) {
 	}
 
 	var response any
-	err := testUtils.GetWithToken("user", fakeUserDetails, &response)
+	err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response)
 	if err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
@@ -124,7 +154,7 @@ func TestGetUserInfo_WrongPassword(t *testing.T) {
 	}
 
 	var response any
-	err := testUtils.GetWithToken("user", fakeUserDetails, &response)
+	err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response)
 	if err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
@@ -145,7 +175,7 @@ func TestAddTeamPlayer(t *testing.T) {
 	}
 
 	playersNumBefore := len(getUser(t.FailNow).Team)
-	testUtils.PostWithToken("user/addplayer", data, loginDetails, nil)
+	testUtils.PostWithToken(userAddPlayerUrl, data, loginDetails, nil)
 	playersNumAfter := len(getUser(t.FailNow).Team)
 
 	assert.Equal(t,
@@ -162,7 +192,7 @@ func TestAddTeamPlayer_NotExists(t *testing.T) {
 	}
 
 	var response any
-	testUtils.PostWithToken("user/addplayer", data, loginDetails, &response)
+	testUtils.PostWithToken(userAddPlayerUrl, data, loginDetails, &response)
 
 	assert.Contains(t,
 		response,
@@ -175,7 +205,7 @@ func TestAddTeamPlayer_NoData(t *testing.T) {
 	postUser(t.FailNow, nil)
 
 	var response any
-	testUtils.PostWithToken("user/addplayer", entities.Entity{}, loginDetails, &response)
+	testUtils.PostWithToken(userAddPlayerUrl, entities.Entity{}, loginDetails, &response)
 
 	assert.Contains(t,
 		response,
@@ -190,10 +220,10 @@ func TestRemoveTeamPlayer(t *testing.T) {
 	data := entities.Entity{
 		ID: playerId,
 	}
-	testUtils.PostWithToken("user/addplayer", data, loginDetails, nil)
+	testUtils.PostWithToken(userAddPlayerUrl, data, loginDetails, nil)
 
 	playersNumBefore := len(getUser(t.FailNow).Team)
-	testUtils.PostWithToken("user/removeplayer", data, loginDetails, nil)
+	testUtils.PostWithToken(userRemovePlayerUrl, data, loginDetails, nil)
 	playersNumAfter := len(getUser(t.FailNow).Team)
 
 	assert.Equal(t,
@@ -210,7 +240,7 @@ func TestRemoveTeamPlayer_NotExists(t *testing.T) {
 	}
 
 	var response any
-	testUtils.PostWithToken("user/removeplayer", data, loginDetails, &response)
+	testUtils.PostWithToken(userRemovePlayerUrl, data, loginDetails, &response)
 
 	assert.Contains(t,
 		response,
@@ -223,7 +253,7 @@ func TestRemoveTeamPlayer_NoData(t *testing.T) {
 	postUser(t.FailNow, nil)
 
 	var response any
-	testUtils.PostWithToken("user/removeplayer", entities.Entity{}, loginDetails, &response)
+	testUtils.PostWithToken(userRemovePlayerUrl, entities.Entity{}, loginDetails, &response)
 
 	assert.Contains(t,
 		response,

@@ -32,7 +32,7 @@ func NewLeague(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"addedLeague": true})
+	ctx.JSON(http.StatusOK, gin.H{"leagueId": leagueId})
 }
 
 func GetLeagueInfo(ctx *gin.Context) {
@@ -40,7 +40,7 @@ func GetLeagueInfo(ctx *gin.Context) {
 
 	leagueId := ctx.Query("id")
 	if leagueId == "" {
-		appError := lib.Error(http.StatusBadRequest, "No League ID Supplied")
+		appError := lib.Error(http.StatusBadRequest, "missing-request-data")
 		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
@@ -51,7 +51,7 @@ func GetLeagueInfo(ctx *gin.Context) {
 		return
 	}
 	if !entities.LeagueContainsMember(league, UID) {
-		appError := lib.Error(http.StatusUnauthorized, "You are not a member of this league")
+		appError := lib.Error(http.StatusUnauthorized, "not-league-member")
 		ctx.JSON(appError.Code, appError.Json)
 		return
 	}

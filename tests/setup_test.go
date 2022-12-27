@@ -44,6 +44,9 @@ func initTestRouter() {
 	router.GET("/players/query", controllers.QueryPlayersByName)
 	router.POST("/players", controllers.NewPlayer)
 
+	router.GET("/league", controllers.VerifyIdToken, controllers.GetLeagueInfo)
+	router.POST("/newleague", controllers.VerifyIdToken, controllers.NewLeague)
+
 	router.POST("/register", controllers.NewUser)
 	router.POST("/user/addplayer", controllers.VerifyIdToken, controllers.AddTeamPlayer)
 	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
