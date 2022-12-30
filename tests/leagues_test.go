@@ -58,8 +58,7 @@ func getLeague(failTest func(), leagueId string, response any) {
 		url = getLeagueInfoUrl(leagueId)
 	}
 
-	err := testUtils.GetWithToken(url, loginDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(url, loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get league info")
 		failTest()
 	}
@@ -72,7 +71,7 @@ func TestNewLeague(t *testing.T) {
 
 	assert.NotEmpty(t,
 		response.LeagueId,
-		"Should add new league and return its id")
+		"Should return the league ID in database")
 }
 
 func TestNewLeague_NoData(t *testing.T) {
@@ -142,13 +141,23 @@ func TestGetLeagueInfo_NotExists(t *testing.T) {
 func TestGetLeagueInfo_NotMember(t *testing.T) {
 	beforeEach(t.FailNow)
 
-	postOtherUser(t.FailNow, nil)
+	notInLeagueUser := entities.AddUser{
+		FullName: "Other User",
+		Nickname: "Someone",
+		Email:    "other@user.test",
+		Password: "usertest",
+	}
+	loginDetails := testUtils.LoginUser{
+		Email:    notInLeagueUser.Email,
+		Password: notInLeagueUser.Password,
+	}
+
+	postThisUser(t.FailNow, notInLeagueUser, nil)
 	leagueId := postLeague(t.FailNow).LeagueId
 	url := getLeagueInfoUrl(leagueId)
 
 	var response any
-	err := testUtils.GetWithToken(url, otherLoginDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(url, loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get league info")
 		t.FailNow()
 	}

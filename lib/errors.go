@@ -47,16 +47,14 @@ var (
 func CreateUserError(err error) AppError {
 	code, message := serverErrorCode, serverErrorMessage
 
-	if strings.Contains(err.Error(), "must be a non-empty string") {
-		code, message = http.StatusBadRequest, "missing-request-data"
-	} else if err.Error() == "password must be a string at least 6 characters long" {
+	if err.Error() == "password must be a string at least 6 characters long" {
 		code, message = http.StatusBadRequest, "password-too-short"
+	} else if strings.Contains(err.Error(), "malformed email string: ") {
+		code, message = http.StatusBadRequest, "invalid-email"
 	} else if auth.IsEmailAlreadyExists(err) {
 		code, message = http.StatusBadRequest, "email-already-exists"
-	} else if auth.IsInvalidEmail(err) {
-		code, message = http.StatusUnprocessableEntity, "invalid-email"
-	} else if auth.IsProjectNotFound(err) {
-		code, message = http.StatusServiceUnavailable, "project-not-found"
+	} else {
+		code, message = serverErrorCode, "create-user-error"
 	}
 
 	return Error(code, message)
@@ -67,6 +65,8 @@ func GetDocumentError(err error) AppError {
 
 	if isStatusNotFound(err) {
 		code, message = http.StatusNotFound, "not-found"
+	} else {
+		code, message = serverErrorCode, "get-document-error"
 	}
 
 	return Error(code, message)
@@ -95,6 +95,8 @@ func VerifyTokenError(err error) AppError {
 		code, message = http.StatusUnauthorized, "session-cookie-revoked"
 	} else if auth.IsUserNotFound(err) {
 		code, message = http.StatusNotFound, "user-not-found"
+	} else {
+		code, message = serverErrorCode, "verify-token-error"
 	}
 
 	return Error(code, message)
@@ -107,7 +109,7 @@ func JsonBindingError(err error) AppError {
 		strings.Contains(err.Error(), "failed on the 'required' tag") {
 		code, message = http.StatusBadRequest, "missing-request-data"
 	} else {
-		code, message = http.StatusInternalServerError, "data-binding-failure"
+		code, message = serverErrorCode, "data-binding-failure"
 	}
 
 	return Error(code, message)

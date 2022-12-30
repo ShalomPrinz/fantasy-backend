@@ -6,7 +6,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
-	"google.golang.org/api/iterator"
 )
 
 func IsExists(ctx *gin.Context, collection string, id string) bool {
@@ -20,23 +19,6 @@ func IsExists(ctx *gin.Context, collection string, id string) bool {
 		}
 	}
 	return true
-}
-
-func GetAll[T any](ctx *gin.Context, collection string) ([]T, AppError) {
-	var result []T
-	iter := Client.Collection(collection).Documents(ctx)
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Printf("Failed to iterate over %s collection: %v", collection, err)
-			return nil, GetDocumentError(err)
-		}
-		result = append(result, utils.GetDocData[T](doc))
-	}
-	return result, EmptyError
 }
 
 func GetSingle[T any](ctx *gin.Context, collection string, id string) (T, AppError) {

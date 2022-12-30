@@ -32,31 +32,14 @@ var (
 		Email:    user.Email,
 		Password: user.Password,
 	}
-
-	otherUser = entities.AddUser{
-		FullName: "Other User",
-		Nickname: "Someone",
-		Email:    "other@user.test",
-		Password: "usertest",
-	}
-
-	otherLoginDetails = testUtils.LoginUser{
-		Email:    otherUser.Email,
-		Password: otherUser.Password,
-	}
 )
 
 func postUser(failTest func(), response any) {
-	err := testUtils.Post("register", user, &response)
-	if err != nil {
-		fmt.Println("Request failed for register user")
-		failTest()
-	}
+	postThisUser(failTest, user, &response)
 }
 
-func postOtherUser(failTest func(), response any) {
-	err := testUtils.Post("register", otherUser, &response)
-	if err != nil {
+func postThisUser(failTest func(), user entities.AddUser, response any) {
+	if err := testUtils.Post("register", user, &response); err != nil {
 		fmt.Println("Request failed for register user")
 		failTest()
 	}
@@ -64,8 +47,7 @@ func postOtherUser(failTest func(), response any) {
 
 func getUser(failTest func()) entities.DetailedAccount {
 	var response map[string]any
-	err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get user info")
 		failTest()
 	}
@@ -80,29 +62,66 @@ func getUser(failTest func()) entities.DetailedAccount {
 func TestRegisterUser(t *testing.T) {
 	beforeEach(t.FailNow)
 
-	var response any
-	postUser(t.FailNow, &response)
-
-	assert.Equal(t,
-		map[string]any{"status": "success"},
-		response,
-		"Should register new user.")
-}
-
-func TestRegisterUser_NoData(t *testing.T) {
-	beforeEach(t.FailNow)
-
-	var response any
-	err := testUtils.Post("register", entities.AddUser{}, &response)
-	if err != nil {
-		fmt.Println("Request failed for register user")
-		t.FailNow()
+	type TestCase struct {
+		user          entities.AddUser
+		expected      map[string]any
+		description   string
+		postUserTwice bool
 	}
 
-	assert.Contains(t,
-		response,
-		"error",
-		"Should return error when posting user without data")
+	tests := []TestCase{
+		{
+			user:        user,
+			expected:    map[string]any{"status": "success"},
+			description: "Success: Should register new user",
+		},
+		{
+			user:        entities.AddUser{},
+			expected:    map[string]any{"error": "missing-request-data"},
+			description: "NoData: Should return error for user without data",
+		},
+		{
+			user: entities.AddUser{
+				FullName: "Test User",
+				Nickname: "Testy",
+				Email:    "bad_email",
+				Password: "testtest",
+			},
+			expected:    map[string]any{"error": "invalid-email"},
+			description: "InvalidEmail: Should return error for user with invalid email",
+		},
+		{
+			user: entities.AddUser{
+				FullName: "Test User",
+				Nickname: "Testy",
+				Email:    "test@test.test",
+				Password: "short",
+			},
+			expected:    map[string]any{"error": "password-too-short"},
+			description: "ShortPassword: Should return error for user with a password shorter than 6 letters",
+		},
+		{
+			user:          user,
+			expected:      map[string]any{"error": "email-already-exists"},
+			description:   "EmailExists: Should return error for user with an email already exists",
+			postUserTwice: true,
+		},
+	}
+
+	for _, test := range tests {
+		beforeEach(t.FailNow)
+
+		var response any
+		postThisUser(t.FailNow, test.user, &response)
+		if test.postUserTwice {
+			postThisUser(t.FailNow, test.user, &response)
+		}
+
+		assert.Equal(t,
+			test.expected,
+			response,
+			test.description)
+	}
 }
 
 func TestGetUserInfo(t *testing.T) {
@@ -110,8 +129,7 @@ func TestGetUserInfo(t *testing.T) {
 	postUser(t.FailNow, nil)
 
 	var response any
-	err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(getUserInfoUrl, loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
 	}
@@ -132,8 +150,7 @@ func TestGetUserInfo_NotExists(t *testing.T) {
 	}
 
 	var response any
-	err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response); err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
 	}
@@ -141,7 +158,7 @@ func TestGetUserInfo_NotExists(t *testing.T) {
 	assert.Contains(t,
 		response,
 		"error",
-		"Should return error for non-exist user")
+		"Should return error for nonexistent user email")
 }
 
 func TestGetUserInfo_WrongPassword(t *testing.T) {
@@ -154,8 +171,7 @@ func TestGetUserInfo_WrongPassword(t *testing.T) {
 	}
 
 	var response any
-	err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response)
-	if err != nil {
+	if err := testUtils.GetWithToken(getUserInfoUrl, fakeUserDetails, &response); err != nil {
 		fmt.Println("Request failed for get user info")
 		t.FailNow()
 	}
@@ -169,7 +185,7 @@ func TestGetUserInfo_WrongPassword(t *testing.T) {
 func TestAddTeamPlayer(t *testing.T) {
 	beforeEach(t.FailNow)
 	postUser(t.FailNow, nil)
-	_, playerId := postPlayer(t.FailNow)
+	playerId := postPlayer(t.FailNow).PlayerId
 	data := entities.Entity{
 		ID: playerId,
 	}
@@ -216,7 +232,7 @@ func TestAddTeamPlayer_NoData(t *testing.T) {
 func TestRemoveTeamPlayer(t *testing.T) {
 	beforeEach(t.FailNow)
 	postUser(t.FailNow, nil)
-	_, playerId := postPlayer(t.FailNow)
+	playerId := postPlayer(t.FailNow).PlayerId
 	data := entities.Entity{
 		ID: playerId,
 	}
