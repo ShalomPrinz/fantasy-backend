@@ -45,7 +45,7 @@ var (
 )
 
 func CreateUserError(err error) AppError {
-	code, message := serverErrorCode, serverErrorMessage
+	code, message := serverErrorCode, "create-user-error"
 
 	if err.Error() == "password must be a string at least 6 characters long" {
 		code, message = http.StatusBadRequest, "password-too-short"
@@ -53,20 +53,16 @@ func CreateUserError(err error) AppError {
 		code, message = http.StatusBadRequest, "invalid-email"
 	} else if auth.IsEmailAlreadyExists(err) {
 		code, message = http.StatusBadRequest, "email-already-exists"
-	} else {
-		code, message = serverErrorCode, "create-user-error"
 	}
 
 	return Error(code, message)
 }
 
 func GetDocumentError(err error) AppError {
-	code, message := serverErrorCode, serverErrorMessage
+	code, message := serverErrorCode, "get-document-error"
 
 	if isStatusNotFound(err) {
 		code, message = http.StatusNotFound, "not-found"
-	} else {
-		code, message = serverErrorCode, "get-document-error"
 	}
 
 	return Error(code, message)
@@ -81,35 +77,27 @@ func RemoveItemError(err error) AppError {
 }
 
 func VerifyTokenError(err error) AppError {
-	code, message := serverErrorCode, serverErrorMessage
+	code, message := serverErrorCode, "verify-token-error"
 
 	if strings.Contains(err.Error(), "must be a non-empty string") {
 		code, message = http.StatusUnauthorized, "id-token-missing"
+	} else if strings.Contains(err.Error(), "incorrect number of segments") {
+		code, message = http.StatusUnauthorized, "id-token-invalid"
 	} else if strings.Contains(err.Error(), "ID token has expired at:") {
 		code, message = http.StatusUnauthorized, "id-token-expired"
 	} else if strings.Contains(err.Error(), "ID token issued at future timestamp:") {
 		code, message = http.StatusUnauthorized, "id-token-expired"
-	} else if auth.IsIDTokenRevoked(err) {
-		code, message = http.StatusUnauthorized, "id-token-revoked"
-	} else if auth.IsSessionCookieRevoked(err) {
-		code, message = http.StatusUnauthorized, "session-cookie-revoked"
-	} else if auth.IsUserNotFound(err) {
-		code, message = http.StatusNotFound, "user-not-found"
-	} else {
-		code, message = serverErrorCode, "verify-token-error"
 	}
 
 	return Error(code, message)
 }
 
 func JsonBindingError(err error) AppError {
-	code, message := serverErrorCode, serverErrorMessage
+	code, message := serverErrorCode, "data-binding-failure"
 
 	if strings.Contains(err.Error(), "Error:Field validation for") &&
 		strings.Contains(err.Error(), "failed on the 'required' tag") {
 		code, message = http.StatusBadRequest, "missing-request-data"
-	} else {
-		code, message = serverErrorCode, "data-binding-failure"
 	}
 
 	return Error(code, message)

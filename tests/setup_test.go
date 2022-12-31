@@ -52,6 +52,9 @@ func initTestRouter() {
 	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
 	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
+	// Test Routes
+	router.GET("/test-token", controllers.VerifyIdToken)
+
 	go router.Run(":8080")
 	time.Sleep(50 * time.Millisecond)
 }

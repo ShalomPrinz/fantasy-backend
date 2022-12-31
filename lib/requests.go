@@ -14,7 +14,7 @@ func IsExists(ctx *gin.Context, collection string, id string) bool {
 		if isStatusNotFound(err) {
 			return false
 		} else {
-			log.Printf("Error checking if id %s exists in collection %s. The result might be corrupted", id, collection)
+			log.Printf("Error getting document %s in collection %s", id, collection)
 			return false
 		}
 	}

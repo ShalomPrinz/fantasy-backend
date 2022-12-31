@@ -47,19 +47,26 @@ type Url struct {
 }
 
 func GetWithToken(url Url, loginDetails LoginUser, response any) error {
-	return requestWithToken(http.MethodGet, url, nil, loginDetails, response)
-}
-
-func PostWithToken(url Url, data any, loginDetails LoginUser, response any) error {
-	return requestWithToken(http.MethodPost, url, data, loginDetails, response)
-}
-
-func requestWithToken(method string, url Url, data any, loginDetails LoginUser, response any) error {
 	token, err := GenerateIdToken(loginDetails)
 	if err != nil {
 		return err
 	}
+	return requestWithToken(http.MethodGet, url, nil, token, response)
+}
 
+func GetWithCustomToken(url Url, token string, response any) error {
+	return requestWithToken(http.MethodGet, url, nil, token, response)
+}
+
+func PostWithToken(url Url, data any, loginDetails LoginUser, response any) error {
+	token, err := GenerateIdToken(loginDetails)
+	if err != nil {
+		return err
+	}
+	return requestWithToken(http.MethodPost, url, data, token, response)
+}
+
+func requestWithToken(method string, url Url, data any, token string, response any) error {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, firestoreUrl+url.Path, encodeStruct(data))
 	if err != nil {
