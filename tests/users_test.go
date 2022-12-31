@@ -23,7 +23,7 @@ var (
 
 	user = entities.AddUser{
 		FullName: "Test User",
-		Nickname: "Testy",
+		Username: "Testy",
 		Email:    "test@test.test",
 		Password: "testtest",
 	}
@@ -62,6 +62,16 @@ func getUser(failTest func()) entities.DetailedAccount {
 func TestRegisterUser(t *testing.T) {
 	beforeEach(t.FailNow)
 
+	var response any
+	postUser(t.FailNow, &response)
+
+	assert.Contains(t,
+		response,
+		"userId",
+		"Should register new user and return his id")
+}
+
+func TestRegisterUserErrors(t *testing.T) {
 	type TestCase struct {
 		user          entities.AddUser
 		expected      map[string]any
@@ -71,11 +81,6 @@ func TestRegisterUser(t *testing.T) {
 
 	tests := []TestCase{
 		{
-			user:        user,
-			expected:    map[string]any{"status": "success"},
-			description: "Success: Should register new user",
-		},
-		{
 			user:        entities.AddUser{},
 			expected:    map[string]any{"error": "missing-request-data"},
 			description: "NoData: Should return error for user without data",
@@ -83,7 +88,7 @@ func TestRegisterUser(t *testing.T) {
 		{
 			user: entities.AddUser{
 				FullName: "Test User",
-				Nickname: "Testy",
+				Username: "Testy",
 				Email:    "bad_email",
 				Password: "testtest",
 			},
@@ -93,7 +98,7 @@ func TestRegisterUser(t *testing.T) {
 		{
 			user: entities.AddUser{
 				FullName: "Test User",
-				Nickname: "Testy",
+				Username: "Testy",
 				Email:    "test@test.test",
 				Password: "short",
 			},

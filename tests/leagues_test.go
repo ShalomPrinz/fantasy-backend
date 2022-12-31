@@ -139,7 +139,7 @@ func TestGetLeagueInfo_NotMember(t *testing.T) {
 
 	notInLeagueUser := entities.AddUser{
 		FullName: "Other User",
-		Nickname: "Someone",
+		Username: "Someone",
 		Email:    "other@user.test",
 		Password: "usertest",
 	}

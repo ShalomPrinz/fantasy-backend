@@ -52,6 +52,8 @@ func initTestRouter() {
 	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
 	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
+	router.POST("/leagueinvite", controllers.VerifyIdToken, controllers.NewLeagueInvitation)
+
 	// Test Routes
 	router.GET("/test-token", controllers.VerifyIdToken)
 

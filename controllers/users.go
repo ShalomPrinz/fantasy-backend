@@ -86,8 +86,9 @@ func GetUserInfo(ctx *gin.Context) {
 
 	detailed := entities.DetailedAccount{
 		Entity:   user.Entity,
+		Inbox:    user.Inbox,
 		Leagues:  entities.LeaguesToLeaguesInfo(leagues),
-		Nickname: user.Nickname,
+		Username: user.Username,
 		Team:     team,
 	}
 	ctx.JSON(http.StatusOK, gin.H{"user": detailed})
@@ -107,8 +108,9 @@ func NewUser(ctx *gin.Context) {
 	}
 
 	account := entities.InsertAccount{
+		Inbox:    []entities.Message{},
 		Leagues:  []string{},
-		Nickname: input.Nickname,
+		Username: input.Username,
 		Team:     []string{},
 	}
 	if appError := lib.InsertItemCustomID(ctx, "accounts", UID, account); appError.HasError() {
@@ -116,7 +118,7 @@ func NewUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+	ctx.JSON(http.StatusOK, gin.H{"userId": UID})
 }
 
 // For internal use only

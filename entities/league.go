@@ -14,7 +14,7 @@ const (
 
 type Member struct {
 	Entity   `mapstructure:",squash"`
-	Nickname string   `json:"nickname"`
+	Username string   `json:"Username"`
 	Team     []Player `json:"team"`
 	Role     role     `json:"role"`
 }

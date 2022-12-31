@@ -70,7 +70,7 @@ func GetLeagueInfo(ctx *gin.Context) {
 
 		members[index] = entities.Member{
 			Entity:   user.Entity,
-			Nickname: user.Nickname,
+			Username: user.Username,
 			Team:     team,
 			Role:     member.Role,
 		}
