@@ -54,16 +54,25 @@ func RemoveTeamPlayer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
-func GetUserInfo(ctx *gin.Context) {
-	UID := ctx.MustGet("UID").(string)
-
-	user, appError := lib.GetSingle[entities.Account](ctx, "accounts", UID)
+// For internal use only
+func getUserTeam(ctx *gin.Context, uid string) (entities.Account, []entities.Player, lib.AppError) {
+	user, appError := lib.GetSingle[entities.Account](ctx, "accounts", uid)
 	if appError.HasError() {
-		ctx.JSON(appError.Code, appError.Json)
-		return
+		return entities.Account{}, nil, appError
 	}
 
 	team, appError := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+	if appError.HasError() {
+		return entities.Account{}, nil, appError
+	}
+
+	return user, team, lib.EmptyError
+}
+
+func GetUserInfo(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
+
+	user, team, appError := getUserTeam(ctx, UID)
 	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return

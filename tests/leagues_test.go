@@ -50,14 +50,7 @@ func postLeague(failTest func()) postLeagueResponse {
 }
 
 func getLeague(failTest func(), leagueId string, response any) {
-	actualLeagueId := postLeague(failTest).LeagueId
-	var url testUtils.Url
-	if leagueId == "use-actual" {
-		url = getLeagueInfoUrl(actualLeagueId)
-	} else {
-		url = getLeagueInfoUrl(leagueId)
-	}
-
+	url := getLeagueInfoUrl(leagueId)
 	if err := testUtils.GetWithToken(url, loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get league info")
 		failTest()
@@ -105,8 +98,9 @@ func TestNewLeague_AddMember(t *testing.T) {
 func TestGetLeagueInfo(t *testing.T) {
 	beforeEach(t.FailNow)
 
+	leagueId := postLeague(t.FailNow).LeagueId
 	var response map[string]any
-	getLeague(t.FailNow, "use-actual", &response)
+	getLeague(t.FailNow, leagueId, &response)
 
 	assert.Contains(t,
 		response,
@@ -116,26 +110,28 @@ func TestGetLeagueInfo(t *testing.T) {
 
 func TestGetLeagueInfo_NoData(t *testing.T) {
 	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
 
 	var response map[string]any
 	getLeague(t.FailNow, "", &response)
 
-	assert.Contains(t,
+	assert.Equal(t,
+		map[string]any{"error": "missing-request-data"},
 		response,
-		"error",
-		"Should return error if no league id supplied")
+		"Should return missing data error if no league id supplied")
 }
 
 func TestGetLeagueInfo_NotExists(t *testing.T) {
 	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
 
 	var response map[string]any
 	getLeague(t.FailNow, "fake_league_id", &response)
 
-	assert.Contains(t,
+	assert.Equal(t,
+		map[string]any{"error": "not-found"},
 		response,
-		"error",
-		"Should return error if the given id is not in the leagues collection")
+		"Should return not found error if the given id is not in the leagues collection")
 }
 
 func TestGetLeagueInfo_NotMember(t *testing.T) {
@@ -162,8 +158,8 @@ func TestGetLeagueInfo_NotMember(t *testing.T) {
 		t.FailNow()
 	}
 
-	assert.Contains(t,
+	assert.Equal(t,
+		map[string]any{"error": "not-league-member"},
 		response,
-		"error",
 		"Should return error if the logged user is not a member of the league")
 }

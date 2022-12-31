@@ -45,3 +45,23 @@ func TestVerifyToken_WrongToken(t *testing.T) {
 		response,
 		"Should return invalid token error for malformed token")
 }
+
+func TestVerifyToken_UserNotExists(t *testing.T) {
+	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
+	token, err := testUtils.GenerateIdToken(loginDetails)
+	if err != nil {
+		t.FailNow()
+	}
+	// clear all data, including user
+	beforeEach(t.FailNow)
+
+	var response any
+	url := testUtils.Url{Path: "test-token"}
+	testUtils.GetWithCustomToken(url, token, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "user-not-exists"},
+		response,
+		"Should return user not exists error for nonexistent user")
+}

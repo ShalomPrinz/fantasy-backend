@@ -17,7 +17,12 @@ func main() {
 		log.Fatalf("Error loading env file. %v", err)
 	}
 
-	lib.InitClient()
+	// Firestore online database
+	// lib.InitClient()
+
+	// Emulator
+	lib.InitTestClient()
+
 	defer lib.Client.Close()
 
 	router := gin.Default()

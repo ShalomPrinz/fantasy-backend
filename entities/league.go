@@ -3,13 +3,35 @@ package entities
 import (
 	"fantasy/database/utils"
 	"log"
-	"strings"
 )
+
+type role string
+
+const (
+	Admin   role = "admin"
+	Regular role = "member"
+)
+
+type Member struct {
+	Entity   `mapstructure:",squash"`
+	Nickname string   `json:"nickname"`
+	Team     []Player `json:"team"`
+	Role     role     `json:"role"`
+}
+
+type MemberInfo struct {
+	ID   string `json:"memberId"`
+	Role role   `json:"role"`
+}
+
+type AddMemberToLeague struct {
+	LeagueId string `json:"leagueId"`
+}
 
 type League struct {
 	Entity  `mapstructure:",squash"`
-	Members []string `json:"members"`
-	Name    string   `json:"name"`
+	Members []MemberInfo `json:"members"`
+	Name    string       `json:"name"`
 }
 
 type LeagueInfo struct {
@@ -23,8 +45,8 @@ type AddLeague struct {
 }
 
 type InsertLeague struct {
-	Members []string `json:"members"`
-	Name    string   `json:"name"`
+	Members []MemberInfo `json:"members"`
+	Name    string       `json:"name"`
 }
 
 type DetailedLeague struct {
@@ -34,11 +56,11 @@ type DetailedLeague struct {
 }
 
 func getLeagueMemberId(member any) string {
-	id, properCast := member.(string)
+	memberInfo, properCast := member.(MemberInfo)
 	if !properCast {
 		log.Fatal("Error in member cast to account")
 	}
-	return strings.Replace(id, "accounts/", "", 1)
+	return memberInfo.ID
 }
 
 func LeagueContainsMember(league League, memberId string) bool {

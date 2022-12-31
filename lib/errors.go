@@ -37,13 +37,6 @@ const (
 	serverErrorMessage = "internal-server-error"
 )
 
-var (
-	genericServerError = AppError{
-		Code: serverErrorCode,
-		Json: gin.H{"error": serverErrorMessage},
-	}
-)
-
 func CreateUserError(err error) AppError {
 	code, message := serverErrorCode, "create-user-error"
 
@@ -69,11 +62,13 @@ func GetDocumentError(err error) AppError {
 }
 
 func InsertItemError(err error) AppError {
-	return genericServerError
+	code, message := serverErrorCode, "insert-item-error"
+	return Error(code, message)
 }
 
 func RemoveItemError(err error) AppError {
-	return genericServerError
+	code, message := serverErrorCode, "remove-item-error"
+	return Error(code, message)
 }
 
 func VerifyTokenError(err error) AppError {
@@ -87,6 +82,8 @@ func VerifyTokenError(err error) AppError {
 		code, message = http.StatusUnauthorized, "id-token-expired"
 	} else if strings.Contains(err.Error(), "ID token issued at future timestamp:") {
 		code, message = http.StatusUnauthorized, "id-token-expired"
+	} else if auth.IsUserNotFound(err) {
+		code, message = http.StatusUnauthorized, "user-not-exists"
 	}
 
 	return Error(code, message)

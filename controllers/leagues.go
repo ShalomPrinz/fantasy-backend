@@ -3,7 +3,6 @@ package controllers
 import (
 	"fantasy/database/entities"
 	"fantasy/database/lib"
-	"fantasy/database/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,10 +17,16 @@ func NewLeague(ctx *gin.Context) {
 		return
 	}
 
-	memberRef := []string{"accounts/" + UID}
-	leagueId, appError := lib.InsertItem(ctx, "leagues", entities.InsertLeague{
-		Members: memberRef, Name: input.Name,
-	})
+	insertLeagueDetails := entities.InsertLeague{
+		Members: []entities.MemberInfo{
+			{
+				ID:   UID,
+				Role: entities.Admin,
+			},
+		},
+		Name: input.Name,
+	}
+	leagueId, appError := lib.InsertItem(ctx, "leagues", insertLeagueDetails)
 	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return
@@ -38,9 +43,8 @@ func NewLeague(ctx *gin.Context) {
 func GetLeagueInfo(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
-	leagueId := ctx.Query("id")
-	if leagueId == "" {
-		appError := lib.Error(http.StatusBadRequest, "missing-request-data")
+	leagueId, appError := lib.GetRequiredParam(ctx, "id")
+	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
@@ -56,24 +60,20 @@ func GetLeagueInfo(ctx *gin.Context) {
 		return
 	}
 
-	accounts, appError := lib.GetByIds[entities.Account](ctx, "accounts", league.Members)
-	if appError.HasError() {
-		ctx.JSON(appError.Code, appError.Json)
-		return
-	}
-	var mapError lib.AppError
-	mapFunc := func(account entities.Account) entities.Member {
-		if mapError.HasError() {
-			return entities.Member{}
+	members := make([]entities.Member, len(league.Members))
+	for index, member := range league.Members {
+		user, team, appError := getUserTeam(ctx, member.ID)
+		if appError.HasError() {
+			ctx.JSON(appError.Code, appError.Json)
+			return
 		}
 
-		member, appError := mapAccountToMember(ctx, account)
-		mapError = appError
-		return member
-	}
-	members := utils.Map(accounts, mapFunc)
-	if mapError.HasError() {
-		return
+		members[index] = entities.Member{
+			Entity:   user.Entity,
+			Nickname: user.Nickname,
+			Team:     team,
+			Role:     member.Role,
+		}
 	}
 
 	detailedLeague := entities.DetailedLeague{
@@ -82,17 +82,4 @@ func GetLeagueInfo(ctx *gin.Context) {
 		Name:    league.Name,
 	}
 	ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})
-}
-
-func mapAccountToMember(ctx *gin.Context, account entities.Account) (entities.Member, lib.AppError) {
-	team, appError := lib.GetByIds[entities.Player](ctx, "players", account.Team)
-	if appError.HasError() {
-		return entities.Member{}, appError
-	}
-
-	return entities.Member{
-		Entity:   account.Entity,
-		Nickname: account.Nickname,
-		Team:     team,
-	}, lib.EmptyError
 }
