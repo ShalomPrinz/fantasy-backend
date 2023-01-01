@@ -17,15 +17,17 @@ func NewLeagueInvitation(ctx *gin.Context) {
 		return
 	}
 
-	message := &entities.Message{
+	message := &entities.InsertLeagueInvitation{
 		From:     UID,
 		LeagueId: input.LeagueId,
 	}
 
-	if appError := lib.InsertItemIntoArray(ctx, "accounts", input.To, "Inbox", message); appError.HasError() {
+	inboxRef := lib.SubCollectionRef("accounts", input.To, "inbox")
+	messageId, appError := lib.InsertItemToCollection(ctx, inboxRef, message)
+	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+	ctx.JSON(http.StatusOK, gin.H{"messageId": messageId})
 }

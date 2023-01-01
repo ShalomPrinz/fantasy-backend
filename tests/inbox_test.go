@@ -8,39 +8,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func prepareLeagueInvitation(failTest func()) (string, string) {
-	leagueId := postLeague(failTest).LeagueId
-
-	otherUser := entities.AddUser{
+var (
+	invitedUser = entities.AddUser{
 		FullName: "Other User",
 		Username: "Other name",
 		Email:    "other@other.test",
 		Password: "otherpass",
 	}
 
-	var response map[string]string
-	postThisUser(failTest, otherUser, &response)
-	recipientId := response["userId"]
+	invitedUserDetails = testUtils.LoginUser{
+		Email:    "other@other.test",
+		Password: "otherpass",
+	}
+)
 
-	return leagueId, recipientId
+func sendLeagueInvitation(failTest func(), response any) {
+	leagueId, invitedUserId := prepareLeagueInvitation(failTest)
+
+	url := testUtils.Url{Path: "leagueinvite"}
+	message := entities.AddLeagueInvitation{
+		To:       invitedUserId,
+		LeagueId: leagueId,
+	}
+	testUtils.PostWithToken(url, message, loginDetails, &response)
+}
+
+func prepareLeagueInvitation(failTest func()) (string, string) {
+	leagueId := postLeague(failTest).LeagueId
+
+	var response map[string]string
+	postThisUser(failTest, invitedUser, &response)
+	invitedUserId := response["userId"]
+
+	return leagueId, invitedUserId
 }
 
 func TestNewLeagueInvitation(t *testing.T) {
 	beforeEach(t.FailNow)
-	leagueId, recipientId := prepareLeagueInvitation(t.FailNow)
 
 	var response any
-	url := testUtils.Url{Path: "leagueinvite"}
-	message := entities.AddLeagueInvitation{
-		To:       recipientId,
-		LeagueId: leagueId,
-	}
-	testUtils.PostWithToken(url, message, loginDetails, &response)
+	sendLeagueInvitation(t.FailNow, &response)
 
-	assert.Equal(t,
-		map[string]any{"status": "success"},
+	assert.Contains(t,
 		response,
-		"Should send the message to the recipient")
+		"messageId",
+		"Should send the message to the recipient and return the message id")
 }
 
 func TestNewLeagueInvitation_NoData(t *testing.T) {

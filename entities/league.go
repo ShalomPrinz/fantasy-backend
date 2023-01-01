@@ -14,7 +14,7 @@ const (
 
 type Member struct {
 	Entity   `mapstructure:",squash"`
-	Username string   `json:"Username"`
+	Username string   `json:"username"`
 	Team     []Player `json:"team"`
 	Role     role     `json:"role"`
 }
@@ -22,10 +22,6 @@ type Member struct {
 type MemberInfo struct {
 	ID   string `json:"memberId"`
 	Role role   `json:"role"`
-}
-
-type AddMemberToLeague struct {
-	LeagueId string `json:"leagueId"`
 }
 
 type League struct {

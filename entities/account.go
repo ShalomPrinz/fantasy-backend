@@ -15,10 +15,9 @@ type AddAccount struct {
 }
 
 type InsertAccount struct {
-	Inbox    []Message `json:"inbox"`
-	Leagues  []string  `json:"leagues"`
-	Username string    `json:"username"`
-	Team     []string  `json:"team"`
+	Leagues  []string `json:"leagues"`
+	Username string   `json:"username"`
+	Team     []string `json:"team"`
 }
 
 type DetailedAccount struct {

@@ -83,3 +83,44 @@ func GetLeagueInfo(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"league": detailedLeague})
 }
+
+func AcceptLeagueInvitation(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
+
+	var input entities.Entity
+	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	messageRef := "accounts/" + UID + "/inbox/" + input.ID
+	if !lib.IsExists(ctx, messageRef) {
+		appError := lib.Error(http.StatusBadRequest, "no-such-message")
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	message, appError := lib.GetSingleRef[entities.Message](ctx, messageRef)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	memberRef := entities.MemberInfo{
+		ID:   UID,
+		Role: entities.Regular,
+	}
+	appError = lib.InsertItemIntoArray(ctx, "leagues", message.LeagueId, "Members", memberRef)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	appError = signUserToLeague(ctx, UID, message.LeagueId)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+}

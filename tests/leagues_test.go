@@ -163,3 +163,50 @@ func TestGetLeagueInfo_NotMember(t *testing.T) {
 		response,
 		"Should return error if the logged user is not a member of the league")
 }
+
+func TestAddLeagueMember(t *testing.T) {
+	beforeEach(t.FailNow)
+	var res map[string]string
+	sendLeagueInvitation(t.FailNow, &res)
+	messageId := res["messageId"]
+
+	var response any
+	url := testUtils.Url{Path: "accept/leagueinvite"}
+	addMemberData := entities.Entity{ID: messageId}
+	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"status": "success"},
+		response,
+		"Should add other user as a regular member to the league user created")
+}
+
+func TestAddLeagueMember_NoData(t *testing.T) {
+	beforeEach(t.FailNow)
+	sendLeagueInvitation(t.FailNow, nil)
+
+	var response any
+	url := testUtils.Url{Path: "accept/leagueinvite"}
+	addMemberData := entities.Entity{ID: ""}
+	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "missing-request-data"},
+		response,
+		"Should return error if no data is sent")
+}
+
+func TestAddLeagueMember_MessageNotExists(t *testing.T) {
+	beforeEach(t.FailNow)
+	sendLeagueInvitation(t.FailNow, nil)
+
+	var response any
+	url := testUtils.Url{Path: "accept/leagueinvite"}
+	addMemberData := entities.Entity{ID: "fake_message_id"}
+	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "no-such-message"},
+		response,
+		"Should return error if no data is sent")
+}

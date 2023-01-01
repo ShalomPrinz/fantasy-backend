@@ -44,5 +44,8 @@ func main() {
 	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
 	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
 
+	router.POST("/leagueinvite", controllers.VerifyIdToken, controllers.NewLeagueInvitation)
+	router.POST("/accept/leagueinvite", controllers.VerifyIdToken, controllers.AcceptLeagueInvitation)
+
 	router.Run(":8080")
 }

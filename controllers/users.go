@@ -61,7 +61,7 @@ func getUserTeam(ctx *gin.Context, uid string) (entities.Account, []entities.Pla
 		return entities.Account{}, nil, appError
 	}
 
-	team, appError := lib.GetByIds[entities.Player](ctx, "players", user.Team)
+	team, appError := lib.GetByIds[entities.Player](ctx, user.Team)
 	if appError.HasError() {
 		return entities.Account{}, nil, appError
 	}
@@ -78,7 +78,14 @@ func GetUserInfo(ctx *gin.Context) {
 		return
 	}
 
-	leagues, appError := lib.GetByIds[entities.League](ctx, "leagues", user.Leagues)
+	inboxRef := lib.SubCollectionRef("accounts", UID, "inbox")
+	inbox, appError := lib.GetAll[entities.Message](ctx, inboxRef)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	leagues, appError := lib.GetByIds[entities.League](ctx, user.Leagues)
 	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return
@@ -86,7 +93,7 @@ func GetUserInfo(ctx *gin.Context) {
 
 	detailed := entities.DetailedAccount{
 		Entity:   user.Entity,
-		Inbox:    user.Inbox,
+		Inbox:    inbox,
 		Leagues:  entities.LeaguesToLeaguesInfo(leagues),
 		Username: user.Username,
 		Team:     team,
@@ -108,7 +115,6 @@ func NewUser(ctx *gin.Context) {
 	}
 
 	account := entities.InsertAccount{
-		Inbox:    []entities.Message{},
 		Leagues:  []string{},
 		Username: input.Username,
 		Team:     []string{},

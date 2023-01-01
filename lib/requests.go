@@ -6,17 +6,23 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/api/iterator"
 )
 
-func IsExists(ctx *gin.Context, collection string, id string) bool {
-	_, err := Client.Collection(collection).Doc(id).Get(ctx)
+func IsExists(ctx *gin.Context, ref string) bool {
+	snaps, err := Client.GetAll(ctx, []*firestore.DocumentRef{
+		Client.Doc(ref),
+	})
 	if err != nil {
 		if isStatusNotFound(err) {
 			return false
 		} else {
-			log.Printf("Error getting document %s in collection %s", id, collection)
+			log.Printf("Error getting document ref %v: %v", ref, err)
 			return false
 		}
+	}
+	if !snaps[0].Exists() {
+		return false
 	}
 	return true
 }
@@ -31,7 +37,30 @@ func GetSingle[T any](ctx *gin.Context, collection string, id string) (T, AppErr
 	return utils.GetDocData[T](doc), EmptyError
 }
 
-func GetByIds[T any](ctx *gin.Context, collection string, ids []string) ([]T, AppError) {
+func GetAll[T any](ctx *gin.Context, colRef *firestore.CollectionRef) ([]T, AppError) {
+	var result []T
+	iter := colRef.Documents(ctx)
+	defer iter.Stop()
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Printf("Failed to iterate over %v collection: %v", colRef, err)
+			return nil, GetDocumentError(err)
+		}
+		result = append(result, utils.GetDocData[T](doc))
+	}
+	return result, EmptyError
+}
+
+func GetSingleRef[T any](ctx *gin.Context, ref string) (T, AppError) {
+	result, appError := GetByIds[T](ctx, []string{ref})
+	return result[0], appError
+}
+
+func GetByIds[T any](ctx *gin.Context, ids []string) ([]T, AppError) {
 	var refs []*firestore.DocumentRef
 	for _, item := range ids {
 		refs = append(refs, Client.Doc(item))
@@ -45,9 +74,14 @@ func GetByIds[T any](ctx *gin.Context, collection string, ids []string) ([]T, Ap
 }
 
 func InsertItem(ctx *gin.Context, collection string, item any) (string, AppError) {
-	docRef, _, err := Client.Collection(collection).Add(ctx, item)
+	colRef := Client.Collection(collection)
+	return InsertItemToCollection(ctx, colRef, item)
+}
+
+func InsertItemToCollection(ctx *gin.Context, colRef *firestore.CollectionRef, item any) (string, AppError) {
+	docRef, _, err := colRef.Add(ctx, item)
 	if err != nil {
-		log.Printf("Failed adding item to %s collection: %v", collection, err)
+		log.Printf("Failed adding item to %v collection: %v", colRef, err)
 		return "", InsertItemError(err)
 	}
 	return docRef.ID, EmptyError
@@ -88,4 +122,8 @@ func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path s
 		return RemoveItemError(err)
 	}
 	return EmptyError
+}
+
+func SubCollectionRef(collection string, docId string, subcollection string) *firestore.CollectionRef {
+	return Client.Collection(collection).Doc(docId).Collection(subcollection)
 }

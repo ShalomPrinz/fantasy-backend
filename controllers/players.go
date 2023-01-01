@@ -37,7 +37,7 @@ func NewPlayer(ctx *gin.Context) {
 }
 
 func isPlayerExists(ctx *gin.Context, id string) bool {
-	return lib.IsExists(ctx, "players", id)
+	return lib.IsExists(ctx, "players/"+id)
 }
 
 func QueryPlayersByName(ctx *gin.Context) {
