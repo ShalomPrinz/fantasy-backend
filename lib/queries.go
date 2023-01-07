@@ -16,7 +16,7 @@ type Query struct {
 }
 
 func QueryTermInField[T any](ctx *gin.Context, collection string, q Query) []T {
-	var result []T
+	result := make([]T, 0)
 	iter := Client.Collection(collection).
 		Where(q.Field, ">=", q.Term).
 		Where(q.Field, "<=", q.Term+"\uf8ff").

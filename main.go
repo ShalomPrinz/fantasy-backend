@@ -43,6 +43,7 @@ func main() {
 	router.POST("/user/addplayer", controllers.VerifyIdToken, controllers.AddTeamPlayer)
 	router.POST("/user/removeplayer", controllers.VerifyIdToken, controllers.RemoveTeamPlayer)
 	router.GET("/user", controllers.VerifyIdToken, controllers.GetUserInfo)
+	router.GET("/users/query", controllers.VerifyIdToken, controllers.QueryUsersByUsername)
 
 	router.POST("/leagueinvite", controllers.VerifyIdToken, controllers.NewLeagueInvitation)
 	router.POST("/accept/leagueinvite", controllers.VerifyIdToken, controllers.AcceptLeagueInvitation)

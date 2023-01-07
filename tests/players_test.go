@@ -116,7 +116,7 @@ func TestQueryPlayers_NoTerm(t *testing.T) {
 	}
 
 	assert.Equal(t,
-		map[string]any{"players": nil},
+		map[string]any{"players": []any{}},
 		queryResult,
 		"Should return empty players list")
 }
@@ -170,7 +170,7 @@ func TestQueryPlayers_TermNotExists(t *testing.T) {
 	}
 
 	assert.Equal(t,
-		map[string]any{"players": nil},
+		map[string]any{"players": []any{}},
 		queryResult,
 		"Should return empty players list if no player name matches the term")
 }

@@ -28,6 +28,11 @@ type DetailedAccount struct {
 	Team     []Player     `json:"team"`
 }
 
+type QueryAccountDetails struct {
+	Entity   `mapstructure:",squash"`
+	Username string `json:"username"`
+}
+
 // Firebase Auth database, following auth.UserToCreate struct
 type AddUser struct {
 	FullName string `binding:"required"`

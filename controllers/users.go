@@ -132,3 +132,16 @@ func signUserToLeague(ctx *gin.Context, UID string, leagueId string) lib.AppErro
 	path := "leagues/" + leagueId
 	return lib.InsertItemIntoArray(ctx, "accounts", UID, "Leagues", path)
 }
+
+func QueryUsersByUsername(ctx *gin.Context) {
+	term := ctx.Query("term")
+	queryLimit := 3
+
+	accounts := lib.QueryTermInField[entities.QueryAccountDetails](ctx, "accounts", lib.Query{
+		Field: "Username",
+		Limit: queryLimit,
+		Term:  term,
+	})
+
+	ctx.JSON(http.StatusOK, gin.H{"users": accounts})
+}

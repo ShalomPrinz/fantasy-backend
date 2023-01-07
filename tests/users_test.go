@@ -281,3 +281,81 @@ func TestRemoveTeamPlayer_NoData(t *testing.T) {
 		"error",
 		"Should return error if no player id supplied")
 }
+
+func TestQueryUsers_NoTerm(t *testing.T) {
+	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
+
+	url := testUtils.Url{Path: "users/query"}
+	var queryResult any
+	if err := testUtils.GetWithToken(url, loginDetails, &queryResult); err != nil {
+		fmt.Println("Users query failed")
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		map[string]any{"users": []any{}},
+		queryResult,
+		"Should return empty users list")
+}
+
+func TestQueryUsers_TermExists(t *testing.T) {
+	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
+	storedUser := getUser(t.FailNow)
+	otherUser := entities.AddUser{
+		FullName: "Other User",
+		Username: "Someone",
+		Email:    "other@user.test",
+		Password: "usertest",
+	}
+	otherLoginDetails := testUtils.LoginUser{
+		Email:    otherUser.Email,
+		Password: otherUser.Password,
+	}
+	postThisUser(t.FailNow, otherUser, nil)
+
+	url := testUtils.Url{Path: "users/query", Params: []testUtils.UrlParameter{
+		{
+			Key:   "term",
+			Value: user.Username,
+		},
+	}}
+	var queryResult map[string]any
+	if err := testUtils.GetWithToken(url, otherLoginDetails, &queryResult); err != nil {
+		fmt.Println("Users query failed")
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		[]any{
+			map[string]any{
+				"id":       storedUser.ID,
+				"username": storedUser.Username,
+			},
+		},
+		queryResult["users"],
+		"Should return users list which contains otherUser query details")
+}
+
+func TestQueryUsers_TermNotExists(t *testing.T) {
+	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
+
+	url := testUtils.Url{Path: "users/query", Params: []testUtils.UrlParameter{
+		{
+			Key:   "term",
+			Value: user.Username + "NOPE",
+		},
+	}}
+	var queryResult any
+	if err := testUtils.GetWithToken(url, loginDetails, &queryResult); err != nil {
+		fmt.Println("Users query failed")
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		map[string]any{"users": []any{}},
+		queryResult,
+		"Should return empty users list")
+}
