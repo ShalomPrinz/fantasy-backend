@@ -7,13 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testTokenUrl = "test-token"
+)
+
 func TestVerifyToken(t *testing.T) {
 	beforeEach(t.FailNow)
 	postUser(t.FailNow, nil)
 
-	url := testUtils.Url{Path: "test-token"}
 	var response any
-	testUtils.GetWithToken(url, loginDetails, &response)
+	testUtils.GetWithToken(testTokenUrl, loginDetails, &response)
 
 	assert.Equal(t,
 		nil,
@@ -25,7 +28,7 @@ func TestVerifyToken_NoToken(t *testing.T) {
 	beforeEach(t.FailNow)
 
 	var response any
-	testUtils.Get("test-token", &response)
+	testUtils.Get(testTokenUrl, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "id-token-missing"},
@@ -36,9 +39,8 @@ func TestVerifyToken_NoToken(t *testing.T) {
 func TestVerifyToken_WrongToken(t *testing.T) {
 	beforeEach(t.FailNow)
 
-	url := testUtils.Url{Path: "test-token"}
 	var response any
-	testUtils.GetWithCustomToken(url, "some_wrong_token", &response)
+	testUtils.GetWithCustomToken(testTokenUrl, "some_wrong_token", &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "id-token-invalid"},
@@ -57,8 +59,7 @@ func TestVerifyToken_UserNotExists(t *testing.T) {
 	beforeEach(t.FailNow)
 
 	var response any
-	url := testUtils.Url{Path: "test-token"}
-	testUtils.GetWithCustomToken(url, token, &response)
+	testUtils.GetWithCustomToken(testTokenUrl, token, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "user-not-exists"},

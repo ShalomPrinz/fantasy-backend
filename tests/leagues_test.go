@@ -10,26 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	newLeagueUrl = testUtils.Url{
-		Path: "newleague",
-	}
+const (
+	newLeagueUrl          = "newleague"
+	acceptLeagueInviteUrl = "accept/leagueinvite"
+)
 
+var (
 	league = entities.AddLeague{
 		Name: "Test League",
 	}
 )
 
-func getLeagueInfoUrl(leagueId string) testUtils.Url {
-	return testUtils.Url{
-		Path: "league",
-		Params: []testUtils.UrlParameter{
-			{
-				Key:   "id",
-				Value: leagueId,
-			},
-		},
-	}
+func getLeagueUrl(leagueId string) string {
+	return "league?id=" + leagueId
 }
 
 type postLeagueResponse struct {
@@ -50,8 +43,7 @@ func postLeague(failTest func()) postLeagueResponse {
 }
 
 func getLeague(failTest func(), leagueId string, response any) {
-	url := getLeagueInfoUrl(leagueId)
-	if err := testUtils.GetWithToken(url, loginDetails, &response); err != nil {
+	if err := testUtils.GetWithToken(getLeagueUrl(leagueId), loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get league info")
 		failTest()
 	}
@@ -150,10 +142,9 @@ func TestGetLeagueInfo_NotMember(t *testing.T) {
 
 	postThisUser(t.FailNow, notInLeagueUser, nil)
 	leagueId := postLeague(t.FailNow).LeagueId
-	url := getLeagueInfoUrl(leagueId)
 
 	var response any
-	if err := testUtils.GetWithToken(url, loginDetails, &response); err != nil {
+	if err := testUtils.GetWithToken(getLeagueUrl(leagueId), loginDetails, &response); err != nil {
 		fmt.Println("Request failed for get league info")
 		t.FailNow()
 	}
@@ -171,9 +162,8 @@ func TestAddLeagueMember(t *testing.T) {
 	messageId := res["messageId"]
 
 	var response any
-	url := testUtils.Url{Path: "accept/leagueinvite"}
 	addMemberData := entities.Entity{ID: messageId}
-	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"status": "success"},
@@ -186,9 +176,8 @@ func TestAddLeagueMember_NoData(t *testing.T) {
 	sendLeagueInvitation(t.FailNow, nil)
 
 	var response any
-	url := testUtils.Url{Path: "accept/leagueinvite"}
 	addMemberData := entities.Entity{ID: ""}
-	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "missing-request-data"},
@@ -201,9 +190,8 @@ func TestAddLeagueMember_MessageNotExists(t *testing.T) {
 	sendLeagueInvitation(t.FailNow, nil)
 
 	var response any
-	url := testUtils.Url{Path: "accept/leagueinvite"}
 	addMemberData := entities.Entity{ID: "fake_message_id"}
-	testUtils.PostWithToken(url, addMemberData, invitedUserDetails, &response)
+	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "no-such-message"},

@@ -10,17 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	getUserInfoUrl = testUtils.Url{
-		Path: "user",
-	}
-	userAddPlayerUrl = testUtils.Url{
-		Path: "user/addplayer",
-	}
-	userRemovePlayerUrl = testUtils.Url{
-		Path: "user/removeplayer",
-	}
+const (
+	getUserInfoUrl      = "user"
+	userAddPlayerUrl    = "user/addplayer"
+	userRemovePlayerUrl = "user/removeplayer"
+)
 
+var (
 	user = entities.AddUser{
 		FullName: "Test User",
 		Username: "Testy",
@@ -33,6 +29,14 @@ var (
 		Password: user.Password,
 	}
 )
+
+func queryUsersUrl(term string) string {
+	if term == "" {
+		return "users/query"
+	} else {
+		return "users/query?term=" + term
+	}
+}
 
 func postUser(failTest func(), response any) {
 	postThisUser(failTest, user, &response)
@@ -285,10 +289,32 @@ func TestRemoveTeamPlayer_NoData(t *testing.T) {
 func TestQueryUsers_NoTerm(t *testing.T) {
 	beforeEach(t.FailNow)
 	postUser(t.FailNow, nil)
+	otherUser := entities.AddUser{
+		FullName: "Other User",
+		Username: user.Username + "2",
+		Email:    "other@user.test",
+		Password: "usertest",
+	}
+	postThisUser(t.FailNow, otherUser, nil)
 
-	url := testUtils.Url{Path: "users/query"}
 	var queryResult any
-	if err := testUtils.GetWithToken(url, loginDetails, &queryResult); err != nil {
+	if err := testUtils.GetWithToken(queryUsersUrl(""), loginDetails, &queryResult); err != nil {
+		fmt.Println("Users query failed")
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		map[string]any{"users": []any{}},
+		queryResult,
+		"Should return empty users list")
+}
+
+func TestQueryUsers_NoSelf(t *testing.T) {
+	beforeEach(t.FailNow)
+	postUser(t.FailNow, nil)
+
+	var queryResult any
+	if err := testUtils.GetWithToken(queryUsersUrl(""), loginDetails, &queryResult); err != nil {
 		fmt.Println("Users query failed")
 		t.FailNow()
 	}
@@ -315,14 +341,8 @@ func TestQueryUsers_TermExists(t *testing.T) {
 	}
 	postThisUser(t.FailNow, otherUser, nil)
 
-	url := testUtils.Url{Path: "users/query", Params: []testUtils.UrlParameter{
-		{
-			Key:   "term",
-			Value: user.Username,
-		},
-	}}
 	var queryResult map[string]any
-	if err := testUtils.GetWithToken(url, otherLoginDetails, &queryResult); err != nil {
+	if err := testUtils.GetWithToken(queryUsersUrl(user.Username), otherLoginDetails, &queryResult); err != nil {
 		fmt.Println("Users query failed")
 		t.FailNow()
 	}
@@ -342,14 +362,8 @@ func TestQueryUsers_TermNotExists(t *testing.T) {
 	beforeEach(t.FailNow)
 	postUser(t.FailNow, nil)
 
-	url := testUtils.Url{Path: "users/query", Params: []testUtils.UrlParameter{
-		{
-			Key:   "term",
-			Value: user.Username + "NOPE",
-		},
-	}}
 	var queryResult any
-	if err := testUtils.GetWithToken(url, loginDetails, &queryResult); err != nil {
+	if err := testUtils.GetWithToken(queryUsersUrl("NoSuchTerm"), loginDetails, &queryResult); err != nil {
 		fmt.Println("Users query failed")
 		t.FailNow()
 	}
@@ -358,4 +372,33 @@ func TestQueryUsers_TermNotExists(t *testing.T) {
 		map[string]any{"users": []any{}},
 		queryResult,
 		"Should return empty users list")
+}
+
+func TestQueryUsers_QueryLimit(t *testing.T) {
+	beforeEach(t.FailNow)
+	queryLimit := 3
+	usersNum := 5
+	postUser(t.FailNow, nil)
+	usernameToQuery := "user" + user.Username
+	for i := 0; i < usersNum-1; i++ {
+		indexString := fmt.Sprintf("%d", i)
+		user := entities.AddUser{
+			FullName: user.FullName,
+			Username: usernameToQuery + indexString,
+			Email:    "user" + indexString + user.Email,
+			Password: user.Password,
+		}
+		postThisUser(t.FailNow, user, nil)
+	}
+
+	var queryResult map[string][]any
+	if err := testUtils.GetWithToken(queryUsersUrl(usernameToQuery), loginDetails, &queryResult); err != nil {
+		fmt.Println("Users query failed")
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		queryLimit,
+		len(queryResult["users"]),
+		"Should return users list limitted by queryLimit")
 }

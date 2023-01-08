@@ -36,57 +36,39 @@ func Get(path string, response any) error {
 	return decodeBody(res.Body, &response)
 }
 
-type UrlParameter struct {
-	Key   string
-	Value string
-}
-
-type Url struct {
-	Path   string
-	Params []UrlParameter
-}
-
-func GetWithToken(url Url, loginDetails LoginUser, response any) error {
+func GetWithToken(path string, loginDetails LoginUser, response any) error {
 	token, err := GenerateIdToken(loginDetails)
 	if err != nil {
 		return err
 	}
-	return requestWithToken(http.MethodGet, url, nil, token, response)
+	return requestWithToken(http.MethodGet, path, nil, token, response)
 }
 
-func GetWithCustomToken(url Url, token string, response any) error {
-	return requestWithToken(http.MethodGet, url, nil, token, response)
+func GetWithCustomToken(path string, token string, response any) error {
+	return requestWithToken(http.MethodGet, path, nil, token, response)
 }
 
-func PostWithToken(url Url, data any, loginDetails LoginUser, response any) error {
+func PostWithToken(path string, data any, loginDetails LoginUser, response any) error {
 	token, err := GenerateIdToken(loginDetails)
 	if err != nil {
 		return err
 	}
-	return requestWithToken(http.MethodPost, url, data, token, response)
+	return requestWithToken(http.MethodPost, path, data, token, response)
 }
 
-func requestWithToken(method string, url Url, data any, token string, response any) error {
+func requestWithToken(method string, path string, data any, token string, response any) error {
 	client := &http.Client{}
-	req, err := http.NewRequest(method, firestoreUrl+url.Path, encodeStruct(data))
+	req, err := http.NewRequest(method, firestoreUrl+path, encodeStruct(data))
 	if err != nil {
-		fmt.Printf("Creating %v request failed. Given url: %v\n", method, url.Path)
+		fmt.Printf("Creating %v request failed. Given url: %v\n", method, path)
 		return err
-	}
-
-	if len(url.Params) > 0 {
-		q := req.URL.Query()
-		for _, param := range url.Params {
-			q.Add(param.Key, param.Value)
-		}
-		req.URL.RawQuery = q.Encode()
 	}
 
 	req.Header.Set(os.Getenv("AUTHHEADER"), token)
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("%v request failed. Given url: %v. %v", method, url, err)
+		fmt.Printf("%v request failed. Given url: %v. %v", method, path, err)
 		return err
 	}
 	defer res.Body.Close()

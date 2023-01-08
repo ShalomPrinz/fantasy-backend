@@ -3,6 +3,7 @@ package controllers
 import (
 	"fantasy/database/entities"
 	"fantasy/database/lib"
+	"fantasy/database/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -134,14 +135,28 @@ func signUserToLeague(ctx *gin.Context, UID string, leagueId string) lib.AppErro
 }
 
 func QueryUsersByUsername(ctx *gin.Context) {
+	UID := ctx.MustGet("UID").(string)
 	term := ctx.Query("term")
 	queryLimit := 3
 
+	if term == "" {
+		ctx.JSON(http.StatusOK, gin.H{"users": []any{}})
+	}
+
 	accounts := lib.QueryTermInField[entities.QueryAccountDetails](ctx, "accounts", lib.Query{
 		Field: "Username",
-		Limit: queryLimit,
+		Limit: queryLimit + 1,
 		Term:  term,
 	})
+
+	getAccountId := func(account entities.QueryAccountDetails) string {
+		return account.ID
+	}
+	accounts = utils.RemoveItemByValue(accounts, UID, getAccountId)
+
+	if len(accounts) > queryLimit {
+		accounts = accounts[:queryLimit]
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"users": accounts})
 }

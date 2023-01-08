@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	leagueInviteUrl = "leagueinvite"
+)
+
 var (
 	invitedUser = entities.AddUser{
 		FullName: "Other User",
@@ -25,12 +29,11 @@ var (
 func sendLeagueInvitation(failTest func(), response any) {
 	leagueId, invitedUserId := prepareLeagueInvitation(failTest)
 
-	url := testUtils.Url{Path: "leagueinvite"}
 	message := entities.AddLeagueInvitation{
 		To:       invitedUserId,
 		LeagueId: leagueId,
 	}
-	testUtils.PostWithToken(url, message, loginDetails, &response)
+	testUtils.PostWithToken(leagueInviteUrl, message, loginDetails, &response)
 }
 
 func prepareLeagueInvitation(failTest func()) (string, string) {
@@ -60,8 +63,7 @@ func TestNewLeagueInvitation_NoData(t *testing.T) {
 	prepareLeagueInvitation(t.FailNow)
 
 	var response any
-	url := testUtils.Url{Path: "leagueinvite"}
-	testUtils.PostWithToken(url, entities.AddLeagueInvitation{}, loginDetails, &response)
+	testUtils.PostWithToken(leagueInviteUrl, entities.AddLeagueInvitation{}, loginDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "missing-request-data"},
