@@ -15,3 +15,9 @@ type Message struct {
 	From     string `json:"from"`
 	LeagueId string `json:"leagueId"`
 }
+
+type DetailedMessage struct {
+	Entity `mapstructure:",squash"`
+	From   string     `json:"from"`
+	League LeagueInfo `json:"league"`
+}

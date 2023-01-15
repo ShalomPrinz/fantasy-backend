@@ -70,6 +70,35 @@ func getUserTeam(ctx *gin.Context, uid string) (entities.Account, []entities.Pla
 	return user, team, lib.EmptyError
 }
 
+func getUserInbox(ctx *gin.Context, uid string) ([]entities.DetailedMessage, lib.AppError) {
+	inboxRef := lib.SubCollectionRef("accounts", uid, "inbox")
+	messages, appError := lib.GetAll[entities.Message](ctx, inboxRef)
+	if appError.HasError() {
+		return nil, appError
+	}
+
+	detailedMessages := make([]entities.DetailedMessage, len(messages))
+	for index, message := range messages {
+		league, appError := lib.GetSingle[entities.League](ctx, "leagues", message.LeagueId)
+		if appError.HasError() {
+			return nil, appError
+		}
+
+		from, appError := lib.GetSingle[entities.Account](ctx, "accounts", message.From)
+		if appError.HasError() {
+			return nil, appError
+		}
+
+		detailedMessages[index] = entities.DetailedMessage{
+			Entity: message.Entity,
+			From:   from.Username,
+			League: entities.LeaguesToLeaguesInfo([]entities.League{league})[0],
+		}
+	}
+
+	return detailedMessages, lib.EmptyError
+}
+
 func GetUserInfo(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
@@ -79,8 +108,7 @@ func GetUserInfo(ctx *gin.Context) {
 		return
 	}
 
-	inboxRef := lib.SubCollectionRef("accounts", UID, "inbox")
-	inbox, appError := lib.GetAll[entities.Message](ctx, inboxRef)
+	inbox, appError := getUserInbox(ctx, UID)
 	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return

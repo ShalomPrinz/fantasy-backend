@@ -22,10 +22,10 @@ type InsertAccount struct {
 
 type DetailedAccount struct {
 	Entity   `mapstructure:",squash"`
-	Inbox    []Message    `json:"inbox"`
-	Leagues  []LeagueInfo `json:"leagues"`
-	Username string       `json:"username"`
-	Team     []Player     `json:"team"`
+	Inbox    []DetailedMessage `json:"inbox"`
+	Leagues  []LeagueInfo      `json:"leagues"`
+	Username string            `json:"username"`
+	Team     []Player          `json:"team"`
 }
 
 type QueryAccountDetails struct {
