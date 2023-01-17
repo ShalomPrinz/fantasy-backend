@@ -47,6 +47,7 @@ func main() {
 
 	router.POST("/leagueinvite", controllers.VerifyIdToken, controllers.NewLeagueInvitation)
 	router.POST("/accept/leagueinvite", controllers.VerifyIdToken, controllers.AcceptLeagueInvitation)
+	router.POST("/reject/leagueinvite", controllers.VerifyIdToken, controllers.RejectLeagueInvitaion)
 
 	router.Run(":8080")
 }

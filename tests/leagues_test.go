@@ -13,6 +13,7 @@ import (
 const (
 	newLeagueUrl          = "newleague"
 	acceptLeagueInviteUrl = "accept/leagueinvite"
+	rejectLeagueInviteUrl = "reject/leagueinvite"
 )
 
 var (
@@ -155,14 +156,14 @@ func TestGetLeagueInfo_NotMember(t *testing.T) {
 		"Should return error if the logged user is not a member of the league")
 }
 
-func TestAddLeagueMember(t *testing.T) {
+func TestAcceptLeagueInvitation(t *testing.T) {
 	beforeEach(t.FailNow)
 	var res map[string]string
 	sendLeagueInvitation(t.FailNow, &res)
 	messageId := res["messageId"]
 
 	var response any
-	addMemberData := entities.Entity{ID: messageId}
+	addMemberData := entities.LeagueInviteResponse{MessageId: messageId}
 	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
 
 	assert.Equal(t,
@@ -171,13 +172,13 @@ func TestAddLeagueMember(t *testing.T) {
 		"Should add other user as a regular member to the league user created")
 }
 
-func TestAddLeagueMember_NoData(t *testing.T) {
+func TestAcceptLeagueInvitation_NoData(t *testing.T) {
 	beforeEach(t.FailNow)
 	sendLeagueInvitation(t.FailNow, nil)
 
 	var response any
-	addMemberData := entities.Entity{ID: ""}
-	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: ""}
+	testUtils.PostWithToken(acceptLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "missing-request-data"},
@@ -185,16 +186,94 @@ func TestAddLeagueMember_NoData(t *testing.T) {
 		"Should return error if no data is sent")
 }
 
-func TestAddLeagueMember_MessageNotExists(t *testing.T) {
+func TestAcceptLeagueInvitation_MessageNotExists(t *testing.T) {
 	beforeEach(t.FailNow)
 	sendLeagueInvitation(t.FailNow, nil)
 
 	var response any
-	addMemberData := entities.Entity{ID: "fake_message_id"}
-	testUtils.PostWithToken(acceptLeagueInviteUrl, addMemberData, invitedUserDetails, &response)
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: "fake_message_id"}
+	testUtils.PostWithToken(acceptLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
 
 	assert.Equal(t,
 		map[string]any{"error": "no-such-message"},
 		response,
 		"Should return error if no data is sent")
+}
+
+func TestAcceptLeagueInvitation_AcceptTwice(t *testing.T) {
+	beforeEach(t.FailNow)
+	var res map[string]string
+	sendLeagueInvitation(t.FailNow, &res)
+	messageId := res["messageId"]
+
+	var response any
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: messageId}
+	testUtils.PostWithToken(acceptLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+	testUtils.PostWithToken(acceptLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "no-such-message"},
+		response,
+		"Should remove message if already accepted")
+}
+
+func TestRejectLeagueInvitation(t *testing.T) {
+	beforeEach(t.FailNow)
+	var res map[string]string
+	sendLeagueInvitation(t.FailNow, &res)
+	messageId := res["messageId"]
+
+	var response any
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: messageId}
+	testUtils.PostWithToken(rejectLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"status": "success"},
+		response,
+		"Should reject the league invitation by a given message id")
+}
+
+func TestRejectLeagueInvitation_NoData(t *testing.T) {
+	beforeEach(t.FailNow)
+	sendLeagueInvitation(t.FailNow, nil)
+
+	var response any
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: ""}
+	testUtils.PostWithToken(rejectLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "missing-request-data"},
+		response,
+		"Should return error if no data is sent")
+}
+
+func TestRejectLeagueInvitation_MessageNotExists(t *testing.T) {
+	beforeEach(t.FailNow)
+	sendLeagueInvitation(t.FailNow, nil)
+
+	var response any
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: "fake_message_id"}
+	testUtils.PostWithToken(rejectLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "no-such-message"},
+		response,
+		"Should return error if no data is sent")
+}
+
+func TestRejectLeagueInvitation_AcceptTwice(t *testing.T) {
+	beforeEach(t.FailNow)
+	var res map[string]string
+	sendLeagueInvitation(t.FailNow, &res)
+	messageId := res["messageId"]
+
+	var response any
+	inviteResponseData := entities.LeagueInviteResponse{MessageId: messageId}
+	testUtils.PostWithToken(rejectLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+	testUtils.PostWithToken(rejectLeagueInviteUrl, inviteResponseData, invitedUserDetails, &response)
+
+	assert.Equal(t,
+		map[string]any{"error": "no-such-message"},
+		response,
+		"Should remove message if already rejected")
 }

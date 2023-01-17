@@ -124,6 +124,15 @@ func RemoveItemFromArray(ctx *gin.Context, collection string, doc string, path s
 	return EmptyError
 }
 
+func RemoveItemFromCollection(ctx *gin.Context, documentPath string) AppError {
+	docRef := Client.Doc(documentPath)
+	if _, err := docRef.Delete(ctx); err != nil {
+		log.Printf("Failed remove document %v from collection: %v", docRef, err)
+		return RemoveItemError(err)
+	}
+	return EmptyError
+}
+
 func SubCollectionRef(collection string, docId string, subcollection string) *firestore.CollectionRef {
 	return Client.Collection(collection).Doc(docId).Collection(subcollection)
 }

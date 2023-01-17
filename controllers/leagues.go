@@ -87,15 +87,8 @@ func GetLeagueInfo(ctx *gin.Context) {
 func AcceptLeagueInvitation(ctx *gin.Context) {
 	UID := ctx.MustGet("UID").(string)
 
-	var input entities.Entity
-	if appError := lib.BindRequestJSON(ctx, &input); appError.HasError() {
-		ctx.JSON(appError.Code, appError.Json)
-		return
-	}
-
-	messageRef := "accounts/" + UID + "/inbox/" + input.ID
-	if !lib.IsExists(ctx, messageRef) {
-		appError := lib.Error(http.StatusBadRequest, "no-such-message")
+	messageRef, appError := getMessageRef(ctx)
+	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return
 	}
@@ -117,6 +110,28 @@ func AcceptLeagueInvitation(ctx *gin.Context) {
 	}
 
 	appError = signUserToLeague(ctx, UID, message.LeagueId)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	appError = lib.RemoveItemFromCollection(ctx, messageRef)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+func RejectLeagueInvitaion(ctx *gin.Context) {
+	messageRef, appError := getMessageRef(ctx)
+	if appError.HasError() {
+		ctx.JSON(appError.Code, appError.Json)
+		return
+	}
+
+	appError = lib.RemoveItemFromCollection(ctx, messageRef)
 	if appError.HasError() {
 		ctx.JSON(appError.Code, appError.Json)
 		return

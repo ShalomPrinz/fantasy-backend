@@ -10,6 +10,10 @@ type InsertLeagueInvitation struct {
 	LeagueId string `json:"leagueId"`
 }
 
+type LeagueInviteResponse struct {
+	MessageId string `json:"messageId" binding:"required"`
+}
+
 type Message struct {
 	Entity   `mapstructure:",squash"`
 	From     string `json:"from"`
